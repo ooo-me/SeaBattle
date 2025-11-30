@@ -1,0 +1,11 @@
+[requires]
+qt/[~6]
+
+[generators]
+CMakeDeps
+
+[layout]
+cmake_layout
+
+[options]
+qt/*:shared=True

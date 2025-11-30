@@ -1,0 +1,79 @@
+{
+    "version": 9,
+    "configurePresets": [
+        {
+            "name": "windows-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "installDir": "${sourceDir}/out/install/${presetName}",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "${sourceDir}/cmake-conan/conan_provider.cmake",
+                "CONAN_BUILD_PROFILE": "${sourceDir}/profiles/${presetName}",
+                "CONAN_HOST_PROFILE": "${sourceDir}/profiles/${presetName}"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "x64-debug",
+            "displayName": "x64 Debug",
+            "inherits": "windows-base",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "x64-release",
+            "displayName": "x64 Release",
+            "inherits": "x64-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "x64-release",
+            "configurePreset": "x64-release",
+            "jobs": 8
+        }
+    ],
+    "packagePresets": [
+        {
+            "name": "x64-release",
+            "configurePreset": "x64-release"
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "x64-release",
+            "displayName": "x64 Release Workflow",
+            "description": "Configure, build, and package for x64 Release",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "x64-release"
+                },
+                {
+                    "type": "build",
+                    "name": "x64-release"
+                },
+                {
+                    "type": "package",
+                    "name": "x64-release"
+                }
+            ]
+        }
+    ]
+}
