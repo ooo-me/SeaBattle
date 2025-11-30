@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="ApplicationProgramsFolder">
+            <Component Id="ApplicationShortcut" Guid="*">
+                <Shortcut Id="ApplicationStartMenuShortcut"
+                         Name="SeaBattle"
+                         Description="SeaBattle Game"
+                         Target="[#CM_FP_bin.SeaBattle.exe]"
+                         WorkingDirectory="INSTALLFOLDER"/>
+                <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
+                <RegistryValue Root="HKCU" Key="Software\SeaBattle" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+            </Component>
+        </DirectoryRef>
+
+        <DirectoryRef Id="DesktopFolder">
+            <Component Id="ApplicationShortcutDesktop" Guid="*">
+                <Shortcut Id="ApplicationDesktopShortcut"
+                         Name="SeaBattle"
+                         Description="SeaBattle Game"
+                         Target="[#CM_FP_bin.SeaBattle.exe]"
+                         WorkingDirectory="INSTALLFOLDER"/>
+                <RemoveFolder Id="CleanUpDesktopShortcut" Directory="DesktopFolder" On="uninstall"/>
+                <RegistryValue Root="HKCU" Key="Software\SeaBattle" Name="desktopShortcut" Type="integer" Value="1" KeyPath="yes"/>
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+
+    <Fragment>
+        <Feature Id="AppShortcutsFeature" Title="SeaBattle Shortcuts" Level="1">
+            <ComponentRef Id="ApplicationShortcut" />
+            <ComponentRef Id="ApplicationShortcutDesktop" />
+        </Feature>
+    </Fragment>
+</Wix>
