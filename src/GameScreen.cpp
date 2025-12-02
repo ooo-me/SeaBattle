@@ -30,11 +30,8 @@ GameScreen::GameScreen(QWidget* parent)
     m_mainLayout->addLayout(m_leftLayout);
     m_mainLayout->addLayout(m_rightLayout);
 
-    // Добавляем кнопку выхода в правый нижний угол
-    m_rightLayout->addWidget(m_exitButton, 0, Qt::AlignRight);
-
     m_currentPlayer = 0;
-    rebuildLayoutsForCurrentPlayer();
+    rebuildLayoutsForCurrentPlayer(); // Кнопка выхода будет добавлена в rebuildLayoutsForCurrentPlayer()
 
     connect(m_player2Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
     connect(m_player1Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
@@ -91,6 +88,9 @@ void GameScreen::rebuildLayoutsForCurrentPlayer()
         m_player1Field->enableUnshotCells();
         m_player2Field->disableAllCells();
     }
+    
+    // Добавляем кнопку выхода обратно в правый layout после перестройки
+    m_rightLayout->addWidget(m_exitButton, 0, Qt::AlignRight);
 }
 
 void GameScreen::onPlayerSwitched(int newPlayer)
