@@ -41,9 +41,11 @@ private:
     BattleField* m_player2Field;
     int m_currentPlayer;
 
-    QHBoxLayout* m_mainLayout;
+    QVBoxLayout* m_mainLayout; // Главный вертикальный layout
+    QHBoxLayout* m_fieldsLayout; // Горизонтальный layout для полей
     QVBoxLayout* m_leftLayout;
     QVBoxLayout* m_rightLayout;
+    QHBoxLayout* m_buttonsLayout; // Горизонтальный layout для кнопок внизу
     QLabel* m_player1Label;
     QLabel* m_player2Label;
     QPushButton* m_exitButton; // Кнопка выхода из игры

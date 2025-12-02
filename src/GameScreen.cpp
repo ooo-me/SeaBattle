@@ -6,8 +6,11 @@
 GameScreen::GameScreen(QWidget* parent)
     : QWidget(parent)
 {
-    m_mainLayout = new QHBoxLayout(this);
+    // Создаём главный вертикальный layout
+    m_mainLayout = new QVBoxLayout(this);
 
+    // Создаём горизонтальный layout для игровых полей
+    m_fieldsLayout = new QHBoxLayout();
     m_leftLayout = new QVBoxLayout();
     m_rightLayout = new QVBoxLayout();
 
@@ -27,11 +30,27 @@ GameScreen::GameScreen(QWidget* parent)
     m_exitButton->setStyleSheet("font-size: 14px; padding: 10px;");
     m_exitButton->setVisible(false); // Изначально скрыта
 
-    m_mainLayout->addLayout(m_leftLayout);
-    m_mainLayout->addLayout(m_rightLayout);
+    // Собираем layout для игровых полей
+    m_fieldsLayout->addLayout(m_leftLayout);
+    m_fieldsLayout->addLayout(m_rightLayout);
+
+    // Создаём горизонтальный layout для кнопок внизу с фиксированной высотой
+    m_buttonsLayout = new QHBoxLayout();
+    m_buttonsLayout->addStretch(); // Растягивающий элемент слева
+    m_buttonsLayout->addWidget(m_exitButton);
+    m_buttonsLayout->addStretch(); // Растягивающий элемент справа
+    
+    // Устанавливаем фиксированную высоту для layout кнопок
+    QWidget* buttonsWidget = new QWidget();
+    buttonsWidget->setLayout(m_buttonsLayout);
+    buttonsWidget->setFixedHeight(50); // Фиксированная высота для области кнопок
+
+    // Добавляем все в главный layout
+    m_mainLayout->addLayout(m_fieldsLayout);
+    m_mainLayout->addWidget(buttonsWidget);
 
     m_currentPlayer = 0;
-    rebuildLayoutsForCurrentPlayer(); // Кнопка выхода будет добавлена в rebuildLayoutsForCurrentPlayer()
+    rebuildLayoutsForCurrentPlayer();
 
     connect(m_player2Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
     connect(m_player1Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
@@ -88,9 +107,6 @@ void GameScreen::rebuildLayoutsForCurrentPlayer()
         m_player1Field->enableUnshotCells();
         m_player2Field->disableAllCells();
     }
-    
-    // Добавляем кнопку выхода обратно в правый layout после перестройки
-    m_rightLayout->addWidget(m_exitButton, 0, Qt::AlignRight);
 }
 
 void GameScreen::onPlayerSwitched(int newPlayer)
