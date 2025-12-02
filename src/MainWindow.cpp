@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_welcomeScreen, &WelcomeScreen::startGameRequested, this, &MainWindow::showGameScreen);
     connect(m_gameScreen, &GameScreen::returnToMainMenu, this, &MainWindow::showWelcomeScreen);
     connect(m_gameScreen, &GameScreen::cellClicked, this, &MainWindow::onCellClicked);
+    connect(m_gameScreen, &GameScreen::exitGameRequested, this, &MainWindow::onExitGameRequested);
 }
 
 MainWindow::~MainWindow() = default;
@@ -44,11 +45,17 @@ void MainWindow::showGameScreen()
     m_gameModel->startGame();
     updateBattleFields();
     showTurnMessage(m_gameModel->getCurrentPlayer());
+    
+    // Показываем кнопку выхода, так как игра началась (состояние Playing)
+    m_gameScreen->setExitButtonVisible(true);
 }
 
 void MainWindow::showWelcomeScreen()
 {
     m_stackedWidget->setCurrentWidget(m_welcomeScreen);
+    
+    // Скрываем кнопку выхода на экране приветствия
+    m_gameScreen->setExitButtonVisible(false);
 }
 
 void MainWindow::onCellClicked(int player, int row, int col)
@@ -145,6 +152,9 @@ void MainWindow::onPlayerSwitched(int newPlayer)
 void MainWindow::onGameOver(int winner)
 {
     m_gameScreen->getPlayer2Field()->disableAllCells();
+    
+    // Скрываем кнопку выхода, так как игра окончена
+    m_gameScreen->setExitButtonVisible(false);
 
     QMessageBox msgBox;
     msgBox.setWindowTitle("Игра окончена");
@@ -172,6 +182,20 @@ void MainWindow::onGameOver(int winner)
 
 void MainWindow::onGameStateChanged(SeaBattle::GameState state)
 {
+}
+
+void MainWindow::onExitGameRequested()
+{
+    // Завершаем текущую игру и возвращаемся на экран приветствия
+    // Инициализируем новую модель для следующей игры
+    initializeGameModel();
+    
+    // Очищаем игровые поля
+    m_gameScreen->getPlayer1Field()->clearAll();
+    m_gameScreen->getPlayer2Field()->clearAll();
+    
+    // Переходим на экран приветствия
+    showWelcomeScreen();
 }
 
 void MainWindow::initializeGameModel()

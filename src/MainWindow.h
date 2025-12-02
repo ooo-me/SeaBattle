@@ -27,6 +27,7 @@ private slots:
     void onPlayerSwitched(int newPlayer);
     void onGameOver(int winner);
     void onGameStateChanged(SeaBattle::GameState state);
+    void onExitGameRequested(); // Обработчик запроса на выход из игры
 
 private:
     void initializeGameModel();

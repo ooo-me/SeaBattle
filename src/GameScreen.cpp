@@ -6,8 +6,11 @@
 GameScreen::GameScreen(QWidget* parent)
     : QWidget(parent)
 {
-    m_mainLayout = new QHBoxLayout(this);
+    // Создаём главный вертикальный layout
+    m_mainLayout = new QVBoxLayout(this);
 
+    // Создаём горизонтальный layout для игровых полей
+    m_fieldsLayout = new QHBoxLayout();
     m_leftLayout = new QVBoxLayout();
     m_rightLayout = new QVBoxLayout();
 
@@ -22,14 +25,36 @@ GameScreen::GameScreen(QWidget* parent)
     m_player1Field = new BattleField(true);
     m_player2Field = new BattleField(false);
 
-    m_mainLayout->addLayout(m_leftLayout);
-    m_mainLayout->addLayout(m_rightLayout);
+    // Создаём кнопку выхода из игры
+    m_exitButton = new QPushButton("Выход из игры");
+    m_exitButton->setStyleSheet("font-size: 14px; padding: 10px;");
+    m_exitButton->setVisible(false); // Изначально скрыта
+
+    // Собираем layout для игровых полей
+    m_fieldsLayout->addLayout(m_leftLayout);
+    m_fieldsLayout->addLayout(m_rightLayout);
+
+    // Создаём горизонтальный layout для кнопок внизу
+    m_buttonsLayout = new QHBoxLayout();
+    m_buttonsLayout->addStretch(); // Растягивающий элемент слева для выравнивания кнопки вправо
+    m_buttonsLayout->addWidget(m_exitButton);
+    
+    // Создаём контейнер для layout кнопок
+    m_buttonsWidget = new QWidget(this); // Родитель this для автоматического управления памятью
+    m_buttonsWidget->setLayout(m_buttonsLayout);
+    // Используем минимальную высоту вместо фиксированной, чтобы текст помещался полностью
+    m_buttonsWidget->setMinimumHeight(60);
+
+    // Добавляем все в главный layout
+    m_mainLayout->addLayout(m_fieldsLayout);
+    m_mainLayout->addWidget(m_buttonsWidget);
 
     m_currentPlayer = 0;
     rebuildLayoutsForCurrentPlayer();
 
     connect(m_player2Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
     connect(m_player1Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
+    connect(m_exitButton, &QPushButton::clicked, this, &GameScreen::onExitButtonClicked);
 }
 
 void GameScreen::rebuildLayoutsForCurrentPlayer()
@@ -152,4 +177,16 @@ void GameScreen::onEnemyCellClicked(int row, int col)
     // Не блокируем все поле: пусть модель решает исход.
     // Клик по клетке будет визуально зафиксирован через markHit/markMiss.
     emit cellClicked(m_currentPlayer, row, col);
+}
+
+void GameScreen::onExitButtonClicked()
+{
+    // Завершаем текущую игру и возвращаемся на экран приветствия
+    emit exitGameRequested();
+}
+
+void GameScreen::setExitButtonVisible(bool visible)
+{
+    // Устанавливаем видимость кнопки выхода
+    m_exitButton->setVisible(visible);
 }
