@@ -18,7 +18,7 @@ add_subdirectory("src")
 set(CPACK_PACKAGE_NAME "SeaBattle")
 set(CPACK_PACKAGE_VENDOR "SeaBattle Team")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SeaBattle Game")
-# Version is set by cmake/version.cmake - CPACK_PACKAGE_VERSION_* variables are already defined
+# Version variables (CPACK_PACKAGE_VERSION_*) are set by cmake/version.cmake
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "SeaBattle")
 
 # WiX specific settings
