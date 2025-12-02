@@ -22,14 +22,26 @@ GameScreen::GameScreen(QWidget* parent)
     m_player1Field = new BattleField(true);
     m_player2Field = new BattleField(false);
 
+    // Создаём кнопку выхода из игры
+    m_exitButton = new QPushButton("Выход из игры");
+    m_exitButton->setStyleSheet("font-size: 14px; padding: 10px;");
+    m_exitButton->setVisible(false); // Изначально скрыта
+
     m_mainLayout->addLayout(m_leftLayout);
     m_mainLayout->addLayout(m_rightLayout);
+
+    // Добавляем кнопку выхода в правую нижнюю часть экрана
+    QVBoxLayout* exitButtonLayout = new QVBoxLayout();
+    exitButtonLayout->addStretch();
+    exitButtonLayout->addWidget(m_exitButton, 0, Qt::AlignRight | Qt::AlignBottom);
+    m_mainLayout->addLayout(exitButtonLayout);
 
     m_currentPlayer = 0;
     rebuildLayoutsForCurrentPlayer();
 
     connect(m_player2Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
     connect(m_player1Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
+    connect(m_exitButton, &QPushButton::clicked, this, &GameScreen::onExitButtonClicked);
 }
 
 void GameScreen::rebuildLayoutsForCurrentPlayer()
@@ -152,4 +164,16 @@ void GameScreen::onEnemyCellClicked(int row, int col)
     // Не блокируем все поле: пусть модель решает исход.
     // Клик по клетке будет визуально зафиксирован через markHit/markMiss.
     emit cellClicked(m_currentPlayer, row, col);
+}
+
+void GameScreen::onExitButtonClicked()
+{
+    // Завершаем текущую игру и возвращаемся на экран приветствия
+    emit exitGameRequested();
+}
+
+void GameScreen::setExitButtonVisible(bool visible)
+{
+    // Устанавливаем видимость кнопки выхода
+    m_exitButton->setVisible(visible);
 }

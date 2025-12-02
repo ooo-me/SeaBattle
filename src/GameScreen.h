@@ -16,6 +16,9 @@ public:
 
     BattleField* getPlayer1Field() const { return m_player1Field; }
     BattleField* getPlayer2Field() const { return m_player2Field; }
+    
+    // Показать/скрыть кнопку выхода в зависимости от состояния игры
+    void setExitButtonVisible(bool visible);
 
 public slots:
     void onPlayerSwitched(int newPlayer);
@@ -25,9 +28,11 @@ public slots:
 signals:
     void cellClicked(int player, int row, int col);
     void returnToMainMenu();
+    void exitGameRequested(); // Сигнал для выхода из игры
 
 private slots:
     void onEnemyCellClicked(int row, int col);
+    void onExitButtonClicked(); // Обработчик нажатия кнопки выхода
 
 private:
     void rebuildLayoutsForCurrentPlayer();
@@ -41,4 +46,5 @@ private:
     QVBoxLayout* m_rightLayout;
     QLabel* m_player1Label;
     QLabel* m_player2Label;
+    QPushButton* m_exitButton; // Кнопка выхода из игры
 };
