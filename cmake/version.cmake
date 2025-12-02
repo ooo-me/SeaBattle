@@ -11,11 +11,11 @@ if(DEFINED ENV{CI})
     if(DEFINED ENV{SEABATTLE_PATCH})
         # Use provided PATCH from environment
         set(VERSION_PATCH "$ENV{SEABATTLE_PATCH}")
-    else
+    else()
         # Default to 1 for nightly builds
         set(VERSION_PATCH "1")
     endif()
-else
+else()
     # Local build - use "999" to signal non-production build
     set(VERSION_PATCH "999")
 endif()
