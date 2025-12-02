@@ -181,8 +181,21 @@ void GameScreen::onEnemyCellClicked(int row, int col)
 
 void GameScreen::onExitButtonClicked()
 {
-    // Завершаем текущую игру и возвращаемся на экран приветствия
-    emit exitGameRequested();
+    // Показываем диалог подтверждения выхода
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Подтверждение выхода");
+    msgBox.setText("Вы уверены, что хотите выйти из игры? Текущий прогресс будет потерян.");
+    msgBox.addButton("Вернуться к игре", QMessageBox::RejectRole);
+    QPushButton* exitButton = msgBox.addButton("Выйти", QMessageBox::AcceptRole);
+    
+    msgBox.exec();
+    
+    // Если пользователь подтвердил выход, завершаем текущую игру и возвращаемся на экран приветствия
+    if (msgBox.clickedButton() == exitButton)
+    {
+        emit exitGameRequested();
+    }
+    // Если пользователь нажал "Вернуться к игре", ничего не делаем - игра продолжается
 }
 
 void GameScreen::setExitButtonVisible(bool visible)
