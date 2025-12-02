@@ -30,11 +30,8 @@ GameScreen::GameScreen(QWidget* parent)
     m_mainLayout->addLayout(m_leftLayout);
     m_mainLayout->addLayout(m_rightLayout);
 
-    // Добавляем кнопку выхода в правую нижнюю часть экрана
-    QVBoxLayout* exitButtonLayout = new QVBoxLayout();
-    exitButtonLayout->addStretch();
-    exitButtonLayout->addWidget(m_exitButton, 0, Qt::AlignRight | Qt::AlignBottom);
-    m_mainLayout->addLayout(exitButtonLayout);
+    // Добавляем кнопку выхода в правый нижний угол
+    m_rightLayout->addWidget(m_exitButton, 0, Qt::AlignRight);
 
     m_currentPlayer = 0;
     rebuildLayoutsForCurrentPlayer();

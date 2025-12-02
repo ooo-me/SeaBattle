@@ -187,8 +187,7 @@ void MainWindow::onGameStateChanged(SeaBattle::GameState state)
 void MainWindow::onExitGameRequested()
 {
     // Завершаем текущую игру и возвращаемся на экран приветствия
-    // Создаём новую модель для следующей игры
-    m_gameModel = std::make_unique<GameModelAdapter>();
+    // Инициализируем новую модель для следующей игры
     initializeGameModel();
     
     // Очищаем игровые поля
