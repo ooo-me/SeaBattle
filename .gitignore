@@ -43,3 +43,6 @@
 # IDE files
 .vs/
 out/
+
+# Build directories
+build/
