@@ -40,6 +40,14 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
+        },
+        {
+            "name": "x64-nightly",
+            "displayName": "x64 Nightly",
+            "inherits": "x64-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
         }
     ],
     "buildPresets": [
@@ -47,12 +55,22 @@
             "name": "x64-release",
             "configurePreset": "x64-release",
             "jobs": 8
+        },
+        {
+            "name": "x64-nightly",
+            "configurePreset": "x64-nightly",
+            "jobs": 8
         }
     ],
     "packagePresets": [
         {
             "name": "x64-release",
             "configurePreset": "x64-release",
+            "generators": [ "WIX" ]
+        },
+        {
+            "name": "x64-nightly",
+            "configurePreset": "x64-nightly",
             "generators": [ "WIX" ]
         }
     ],
@@ -73,6 +91,25 @@
                 {
                     "type": "package",
                     "name": "x64-release"
+                }
+            ]
+        },
+        {
+            "name": "x64-nightly",
+            "displayName": "x64 Nightly Workflow",
+            "description": "Configure, build, and package for x64 Nightly builds",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "x64-nightly"
+                },
+                {
+                    "type": "build",
+                    "name": "x64-nightly"
+                },
+                {
+                    "type": "package",
+                    "name": "x64-nightly"
                 }
             ]
         }

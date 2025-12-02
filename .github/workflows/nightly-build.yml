@@ -1,0 +1,72 @@
+name: Nightly Build
+
+on:
+  schedule:
+    # Run daily at 02:00 UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  nightly-build:
+    runs-on: windows-2022
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      
+      - name: Install Conan
+        run: |
+          pip install conan
+          conan --version
+      
+      - name: Setup MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      
+      - name: Install Ninja
+        run: |
+          choco install ninja
+          ninja --version
+      
+      - name: Set version environment variable
+        run: |
+          echo "CI=true" >> $env:GITHUB_ENV
+          echo "SEABATTLE_PATCH=1" >> $env:GITHUB_ENV
+        shell: pwsh
+      
+      - name: Build with CMake workflow preset
+        run: cmake --workflow --preset x64-nightly
+        shell: cmd
+      
+      - name: Get version for artifact naming
+        id: version
+        run: |
+          $year = (Get-Date).ToString("yy")
+          $dayOfYear = (Get-Date).DayOfYear.ToString("000")
+          $version = "${year}.${dayOfYear}.1"
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+      
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SeaBattle-${{ steps.version.outputs.VERSION }}-win64-nightly
+          path: |
+            out/build/x64-nightly/_CPack_Packages/win64/WIX/*.msi
+            out/build/x64-nightly/*.msi
+          if-no-files-found: warn
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SeaBattle-${{ steps.version.outputs.VERSION }}-build-logs
+          path: |
+            out/build/x64-nightly/**/*.log
+          if-no-files-found: ignore

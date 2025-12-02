@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.31)
 
-project("SeaBattle" LANGUAGES CXX)
+# Include version generation before project()
+include(cmake/version.cmake)
+
+project("SeaBattle" LANGUAGES CXX VERSION ${PROJECT_VERSION})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,9 +18,7 @@ add_subdirectory("src")
 set(CPACK_PACKAGE_NAME "SeaBattle")
 set(CPACK_PACKAGE_VENDOR "SeaBattle Team")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SeaBattle Game")
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
+# Version is set by cmake/version.cmake - CPACK_PACKAGE_VERSION_* variables are already defined
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "SeaBattle")
 
 # WiX specific settings
