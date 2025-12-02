@@ -41,13 +41,13 @@ GameScreen::GameScreen(QWidget* parent)
     m_buttonsLayout->addStretch(); // Растягивающий элемент справа
     
     // Устанавливаем фиксированную высоту для layout кнопок
-    QWidget* buttonsWidget = new QWidget();
-    buttonsWidget->setLayout(m_buttonsLayout);
-    buttonsWidget->setFixedHeight(50); // Фиксированная высота для области кнопок
+    m_buttonsWidget = new QWidget(this); // Родитель this для автоматического управления памятью
+    m_buttonsWidget->setLayout(m_buttonsLayout);
+    m_buttonsWidget->setFixedHeight(50); // Фиксированная высота для области кнопок
 
     // Добавляем все в главный layout
     m_mainLayout->addLayout(m_fieldsLayout);
-    m_mainLayout->addWidget(buttonsWidget);
+    m_mainLayout->addWidget(m_buttonsWidget);
 
     m_currentPlayer = 0;
     rebuildLayoutsForCurrentPlayer();

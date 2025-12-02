@@ -46,6 +46,7 @@ private:
     QVBoxLayout* m_leftLayout;
     QVBoxLayout* m_rightLayout;
     QHBoxLayout* m_buttonsLayout; // Горизонтальный layout для кнопок внизу
+    QWidget* m_buttonsWidget; // Контейнер для layout кнопок
     QLabel* m_player1Label;
     QLabel* m_player2Label;
     QPushButton* m_exitButton; // Кнопка выхода из игры
