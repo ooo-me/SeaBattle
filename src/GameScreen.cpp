@@ -34,16 +34,16 @@ GameScreen::GameScreen(QWidget* parent)
     m_fieldsLayout->addLayout(m_leftLayout);
     m_fieldsLayout->addLayout(m_rightLayout);
 
-    // Создаём горизонтальный layout для кнопок внизу с фиксированной высотой
+    // Создаём горизонтальный layout для кнопок внизу
     m_buttonsLayout = new QHBoxLayout();
-    m_buttonsLayout->addStretch(); // Растягивающий элемент слева
+    m_buttonsLayout->addStretch(); // Растягивающий элемент слева для выравнивания кнопки вправо
     m_buttonsLayout->addWidget(m_exitButton);
-    m_buttonsLayout->addStretch(); // Растягивающий элемент справа
     
-    // Устанавливаем фиксированную высоту для layout кнопок
+    // Создаём контейнер для layout кнопок
     m_buttonsWidget = new QWidget(this); // Родитель this для автоматического управления памятью
     m_buttonsWidget->setLayout(m_buttonsLayout);
-    m_buttonsWidget->setFixedHeight(50); // Фиксированная высота для области кнопок
+    // Используем минимальную высоту вместо фиксированной, чтобы текст помещался полностью
+    m_buttonsWidget->setMinimumHeight(60);
 
     // Добавляем все в главный layout
     m_mainLayout->addLayout(m_fieldsLayout);
