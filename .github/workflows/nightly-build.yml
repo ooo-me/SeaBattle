@@ -76,8 +76,7 @@ jobs:
         with:
           name: SeaBattle-${{ steps.version.outputs.VERSION }}-win64-nightly
           path: |
-            out/build/x64-nightly/_CPack_Packages/win64/WIX/*.msi
-            out/build/x64-nightly/*.msi
+            out/build/x64-nightly/*.zip
           if-no-files-found: warn
       
       - name: Upload build artifacts

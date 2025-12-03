@@ -1,5 +1,7 @@
 # WiX Installer Configuration for SeaBattle
 
+> **Note**: Nightly builds use ZIP packaging instead of WiX to avoid external dependencies. This document is for manual release builds only.
+
 ## Prerequisites
 
 1. **WiX Toolset**: Install WiX Toolset v3.x or v4.x from https://wixtoolset.org/
