@@ -71,7 +71,7 @@
         {
             "name": "x64-nightly",
             "configurePreset": "x64-nightly",
-            "generators": [ "WIX" ]
+            "generators": [ "ZIP" ]
         }
     ],
     "workflowPresets": [
