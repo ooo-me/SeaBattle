@@ -21,8 +21,8 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SeaBattle Game")
 # Version variables (CPACK_PACKAGE_VERSION_*) are set by cmake/version.cmake
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "SeaBattle")
 
-# WiX specific settings - only set if CPACK_GENERATOR is not explicitly set to something else
-if(NOT CPACK_GENERATOR OR CPACK_GENERATOR MATCHES "WIX")
+# WiX specific settings - only set when using WiX generator or when no generator is explicitly set
+if(NOT CPACK_GENERATOR OR CPACK_GENERATOR MATCHES "(?i)wix")
     set(CPACK_WIX_UPGRADE_GUID "12345678-1234-1234-1234-123456789ABC")
     set(CPACK_WIX_PROGRAM_MENU_FOLDER "SeaBattle")
 
