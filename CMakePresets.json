@@ -46,7 +46,8 @@
             "displayName": "x64 Nightly",
             "inherits": "x64-debug",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "CPACK_GENERATOR": "ZIP"
             }
         }
     ],
