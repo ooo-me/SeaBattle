@@ -313,14 +313,8 @@ void MainWindow::onCreateNetworkGame(int port)
     // hideConnectionWaitingDialog();
     // showGameScreen();
     
-    // Временная заглушка: показываем сообщение и скрываем диалог
-    QTimer::singleShot(2000, this, [this]() {
-        hideConnectionWaitingDialog();
-        QMessageBox::information(this, "Сетевой режим", 
-                                "Сетевой режим пока в разработке.\nЗапускается локальная игра.");
-        m_isNetworkGame = false;
-        showGameScreen();
-    });
+    // Временная заглушка
+    QTimer::singleShot(NETWORK_STUB_DELAY_MS, this, &MainWindow::showNetworkModeStub);
 }
 
 void MainWindow::onJoinNetworkGame(const QString& host, int port)
@@ -333,14 +327,8 @@ void MainWindow::onJoinNetworkGame(const QString& host, int port)
     // hideConnectionWaitingDialog();
     // showGameScreen();
     
-    // Временная заглушка: показываем сообщение и скрываем диалог
-    QTimer::singleShot(2000, this, [this]() {
-        hideConnectionWaitingDialog();
-        QMessageBox::information(this, "Сетевой режим", 
-                                "Сетевой режим пока в разработке.\nЗапускается локальная игра.");
-        m_isNetworkGame = false;
-        showGameScreen();
-    });
+    // Временная заглушка
+    QTimer::singleShot(NETWORK_STUB_DELAY_MS, this, &MainWindow::showNetworkModeStub);
 }
 
 void MainWindow::showConnectionWaitingDialog(bool isHost, const QString& info)
@@ -372,4 +360,13 @@ void MainWindow::hideConnectionWaitingDialog()
     {
         m_connectionDialog->hide();
     }
+}
+
+void MainWindow::showNetworkModeStub()
+{
+    hideConnectionWaitingDialog();
+    QMessageBox::information(this, "Сетевой режим", 
+                            "Сетевой режим пока в разработке.\nЗапускается локальная игра.");
+    m_isNetworkGame = false;
+    showGameScreen();
 }

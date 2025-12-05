@@ -40,8 +40,11 @@ private:
     void refreshShipOverlaysForCurrentPlayer();
     void showConnectionWaitingDialog(bool isHost, const QString& info);
     void hideConnectionWaitingDialog();
+    void showNetworkModeStub();
 
 private:
+    static constexpr int NETWORK_STUB_DELAY_MS = 2000;
+    
     QStackedWidget* m_stackedWidget;
     WelcomeScreen* m_welcomeScreen;
     GameScreen* m_gameScreen;
