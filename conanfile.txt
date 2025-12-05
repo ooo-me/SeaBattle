@@ -1,5 +1,6 @@
 [requires]
 qt/[~6]
+nlohmann_json/[~3]
 
 [generators]
 CMakeDeps
