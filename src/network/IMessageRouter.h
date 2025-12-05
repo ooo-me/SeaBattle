@@ -2,6 +2,7 @@
 
 #include "IMessage.h"
 #include "IMessageHandler.h"
+#include "ProtocolConstants.h"
 #include <memory>
 #include <string>
 #include <map>
@@ -125,9 +126,9 @@ namespace SeaBattle::Network
 
         bool isVersionSupported(const std::string& version) const override
         {
-            // Currently only support version 1.0
+            // Currently only support current protocol version
             // Future versions should be added here
-            return version == "1.0";
+            return version == ProtocolConstants::PROTOCOL_VERSION;
         }
 
         /**

@@ -67,7 +67,7 @@ namespace SeaBattle::Network
     class BaseMessage : public IMessage
     {
     public:
-        BaseMessage(std::string type, std::string version = "1.0")
+        BaseMessage(std::string type, std::string version = ProtocolConstants::PROTOCOL_VERSION)
             : m_type(std::move(type))
             , m_version(std::move(version))
             , m_timestamp(std::chrono::duration_cast<std::chrono::milliseconds>(

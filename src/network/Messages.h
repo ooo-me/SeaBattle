@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IMessage.h"
+#include "ProtocolConstants.h"
 #include <optional>
 
 namespace SeaBattle::Network
@@ -34,7 +35,8 @@ namespace SeaBattle::Network
 
         bool validatePayload() const override
         {
-            return m_row >= 0 && m_row < 10 && m_col >= 0 && m_col < 10;
+            return ProtocolConstants::isValidCoordinate(m_row) && 
+                   ProtocolConstants::isValidCoordinate(m_col);
         }
 
     private:
@@ -114,9 +116,15 @@ namespace SeaBattle::Network
 
         bool validatePayload() const override
         {
-            bool coordsValid = m_row >= 0 && m_row < 10 && m_col >= 0 && m_col < 10;
-            bool winnerValid = !m_gameOver || m_winner.has_value();
-            return coordsValid && (!m_gameOver || winnerValid);
+            if (!isCoordinatesValid())
+            {
+                return false;
+            }
+            if (!isWinnerValid())
+            {
+                return false;
+            }
+            return true;
         }
 
     private:
@@ -125,6 +133,23 @@ namespace SeaBattle::Network
         Result m_result;
         bool m_gameOver;
         std::optional<int> m_winner;
+
+        bool isCoordinatesValid() const
+        {
+            return ProtocolConstants::isValidCoordinate(m_row) && 
+                   ProtocolConstants::isValidCoordinate(m_col);
+        }
+
+        bool isWinnerValid() const
+        {
+            // If game is over, winner must be specified and valid
+            if (m_gameOver)
+            {
+                return m_winner.has_value() && 
+                       ProtocolConstants::isValidPlayerId(m_winner.value());
+            }
+            return true;
+        }
     };
 
     /**
@@ -289,7 +314,7 @@ namespace SeaBattle::Network
 
         bool validatePayload() const override
         {
-            return m_playerId == 0 || m_playerId == 1;
+            return ProtocolConstants::isValidPlayerId(m_playerId);
         }
 
     private:
@@ -326,9 +351,9 @@ namespace SeaBattle::Network
 
         bool validatePayload() const override
         {
-            return (m_playerId == 0 || m_playerId == 1) && 
+            return ProtocolConstants::isValidPlayerId(m_playerId) && 
                    !m_message.empty() && 
-                   m_message.length() <= 500;
+                   m_message.length() <= ProtocolConstants::MAX_CHAT_MESSAGE_LENGTH;
         }
 
     private:
@@ -394,8 +419,8 @@ namespace SeaBattle::Network
 
         bool validatePayload() const override
         {
-            return (m_currentPlayer == 0 || m_currentPlayer == 1) &&
-                   (m_playerId == 0 || m_playerId == 1);
+            return ProtocolConstants::isValidPlayerId(m_currentPlayer) &&
+                   ProtocolConstants::isValidPlayerId(m_playerId);
         }
 
     private:
@@ -476,7 +501,7 @@ namespace SeaBattle::Network
 
         bool validatePayload() const override
         {
-            return !m_sessionId.empty() && (m_playerId == 0 || m_playerId == 1);
+            return !m_sessionId.empty() && ProtocolConstants::isValidPlayerId(m_playerId);
         }
 
     private:

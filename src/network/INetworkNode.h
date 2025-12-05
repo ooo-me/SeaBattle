@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IMessage.h"
+#include "ProtocolConstants.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -123,10 +124,10 @@ namespace SeaBattle::Network
         /**
          * @brief Start listening for connections
          * @param port Port number to listen on
-         * @param maxConnections Maximum number of concurrent connections (default 2 for 1v1)
+         * @param maxConnections Maximum number of concurrent connections (default for 1v1)
          * @return true if listening started successfully
          */
-        virtual bool listen(int port, int maxConnections = 2) = 0;
+        virtual bool listen(int port, int maxConnections = ProtocolConstants::DEFAULT_MAX_CONNECTIONS) = 0;
 
         /**
          * @brief Stop listening and close all connections
