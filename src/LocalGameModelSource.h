@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IGameModelSource.h"
-#include "Model.h"
+#include "model.h"
 #include <memory>
 
 namespace SeaBattle
@@ -52,7 +52,7 @@ namespace SeaBattle
             // Проверяем, уничтожен ли корабль
             if (hit)
             {
-                CellState state = model->getEnemyCellState(currentPlayer, row, col);
+                CellState state = model->getEnemyViewCellState(currentPlayer, row, col);
                 if (state == CellState::Destroyed)
                 {
                     if (eventCallback)

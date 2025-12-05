@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IGameModelSource.h"
-#include "Model.h"
+#include "model.h"
 
 #include <functional>
 #include <memory>

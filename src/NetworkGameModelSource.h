@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IGameModelSource.h"
-#include "Model.h"
+#include "model.h"
 #include <memory>
 #include <stdexcept>
 
@@ -19,6 +19,7 @@ namespace SeaBattle
         {
             // Здесь должна быть инициализация сетевого соединения
             // Например: подключение к серверу, создание сокета и т.д.
+            // Начальное состояние Welcome до вызова startGame()
         }
 
         void startGame() override
@@ -37,7 +38,7 @@ namespace SeaBattle
             }
 
             // Заглушка: в реальной реализации здесь должна быть сетевая логика
-            throw std::runtime_error("Network functionality not implemented yet");
+            throw std::runtime_error(NOT_IMPLEMENTED_MSG);
         }
 
         bool processShot(int row, int col) override
@@ -59,29 +60,28 @@ namespace SeaBattle
             // ShotResult result = waitForShotResponse();
             // return result.hit;
 
-            throw std::runtime_error("Network functionality not implemented yet");
+            throw std::runtime_error(NOT_IMPLEMENTED_MSG);
         }
 
         CellState getPlayerCellState(int player, int row, int col) const override
         {
             // В реальной реализации здесь нужно получить состояние клетки
             // из локального кэша, синхронизированного с сервером
-            throw std::runtime_error("Network functionality not implemented yet");
+            throw std::runtime_error(NOT_IMPLEMENTED_MSG);
         }
 
         CellState getEnemyCellState(int player, int row, int col) const override
         {
             // В реальной реализации здесь нужно получить состояние клетки противника
             // из локального кэша, синхронизированного с сервером
-            throw std::runtime_error("Network functionality not implemented yet");
+            throw std::runtime_error(NOT_IMPLEMENTED_MSG);
         }
 
         const std::vector<Ship>& getPlayerShips(int player) const override
         {
             // В реальной реализации здесь нужно вернуть корабли игрока
             // из локального кэша, синхронизированного с сервером
-            static std::vector<Ship> emptyShips;
-            return emptyShips;
+            throw std::runtime_error(NOT_IMPLEMENTED_MSG);
         }
 
         int getCurrentPlayer() const override
@@ -118,6 +118,9 @@ namespace SeaBattle
         // void synchronizeGameState();
 
     private:
+        static constexpr const char* NOT_IMPLEMENTED_MSG = 
+            "NetworkGameModelSource not implemented - use LocalGameModelSource for local gameplay";
+
         int currentPlayer;
         GameState gameState;
         GameEventCallback eventCallback;

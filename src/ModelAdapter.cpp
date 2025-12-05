@@ -70,6 +70,7 @@ void GameModelAdapter::handleGameEvent(const SeaBattle::GameEvent& event)
     {
     case SeaBattle::GameEventType::ShotResponse:
         // Уведомляем об изменении клетки
+        // Получаем состояние через источник, который скрывает неподбитые корабли
         if (cellUpdateCallback)
         {
             SeaBattle::CellState newState = modelSource->getEnemyCellState(event.player, event.row, event.col);

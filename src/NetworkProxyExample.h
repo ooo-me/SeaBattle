@@ -79,8 +79,8 @@ namespace SeaBattle
         
         // Получаем состояние - источник вернет данные
         // из локальной модели или из сетевого кэша
-        CellState state = adapter.getEnemyCellState(0, 0, 0);
         int currentPlayer = adapter.getCurrentPlayer();
+        CellState state = adapter.getEnemyCellState(currentPlayer, 0, 0);
         
         // Бизнес-логика полностью изолирована от транспорта!
     }
