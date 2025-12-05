@@ -3,6 +3,10 @@
 #include <random>
 #include <algorithm>
 #include <stdexcept>
+#include <memory>
+#include <string>
+#include <functional>
+#include <thread>
 
 #include <QApplication>
 #include <QMainWindow>
@@ -16,3 +20,6 @@
 #include <QFrame>
 #include <QMessageBox>
 #include <QVector>
+#include <QDialog>
+#include <QLineEdit>
+#include <QSpinBox>
