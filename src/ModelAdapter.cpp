@@ -57,7 +57,7 @@ void GameModelAdapter::initializeActionSource()
 
 void GameModelAdapter::startGame()
 {
-    // Всегда начинаем с чистой модели и новой расстановкой кораблей
+    // Always start with a fresh model and new ship placement
     model = std::make_unique<SeaBattle::GameModel>();
     initializeActionSource();
     model->startGame();
@@ -76,14 +76,8 @@ bool GameModelAdapter::processShot(int row, int col)
     int currentPlayer = model->getCurrentPlayer();
 
     // Use action source to process the shot
+    // All callbacks (cell update, game over, player switch) are handled by the action source
     bool result = actionSource->processShot(currentPlayer, row, col);
-
-    // Additional notification for cell update
-    if (cellUpdateCallback)
-    {
-        SeaBattle::CellState newState = model->getEnemyViewCellState(currentPlayer, row, col);
-        cellUpdateCallback(currentPlayer, row, col, newState);
-    }
 
     return result;
 }
