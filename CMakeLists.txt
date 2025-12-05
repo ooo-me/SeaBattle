@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(Qt6 COMPONENTS Widgets Core REQUIRED)
+find_package(Boost REQUIRED)
+find_package(nlohmann_json REQUIRED)
 qt_standard_project_setup()
 
 add_subdirectory("src")

@@ -1,5 +1,7 @@
 [requires]
 qt/[~6]
+boost/1.86.0
+nlohmann_json/3.11.3
 
 [generators]
 CMakeDeps
@@ -9,3 +11,4 @@ cmake_layout
 
 [options]
 qt/*:shared=True
+boost/*:header_only=True

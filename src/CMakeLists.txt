@@ -12,6 +12,14 @@ qt_add_executable(SeaBattle WIN32
 	"pch.h"
 	"WelcomeScreen.cpp"
 	"WelcomeScreen.h"
+	"Protocol.h"
+	"NetworkSession.h"
+	"ServerSession.h"
+	"ClientSession.h"
+	"NetworkAdapter.h"
+	"NetworkGameModel.h"
+	"ServerSettingsDialog.h"
+	"ClientSettingsDialog.h"
 )
 
 target_precompile_headers(SeaBattle PRIVATE
@@ -21,6 +29,8 @@ target_precompile_headers(SeaBattle PRIVATE
 target_link_libraries(SeaBattle PRIVATE
 	Qt::Core
 	Qt::Widgets
+	Boost::headers
+	nlohmann_json::nlohmann_json
 )
 
 install(TARGETS SeaBattle

@@ -23,6 +23,7 @@ public:
     const std::vector<SeaBattle::Ship>& getPlayerShips(int player) const;
     int getCurrentPlayer() const { return model->getCurrentPlayer(); }
     SeaBattle::GameState getGameState() const { return model->getGameState(); }
+    bool isValidShot(int row, int col) const { return model->isValidShot(row, col); }
 
     // Установка callback'ов
     void setCellUpdateCallback(CellUpdateCallback callback) { cellUpdateCallback = callback; }

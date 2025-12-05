@@ -1,14 +1,23 @@
 #pragma once
 
 #include <QMainWindow>
+#include <memory>
 
 class GameModelAdapter;
 class WelcomeScreen;
 class GameScreen;
+class ServerSettingsDialog;
+class ClientSettingsDialog;
 namespace SeaBattle
 {
     enum class CellState;
     enum class GameState;
+    class NetworkAdapter;
+    class NetworkGameModel;
+    namespace Network
+    {
+        struct Message;
+    }
 }
 
 class MainWindow : public QMainWindow
@@ -29,15 +38,35 @@ private slots:
     void onGameStateChanged(SeaBattle::GameState state);
     void onExitGameRequested(); // Обработчик запроса на выход из игры
 
+    // Network game slots
+    void onCreateServerRequested();
+    void onJoinGameRequested();
+    void onNetworkMessageReceived(const SeaBattle::Network::Message& message);
+    void onNetworkConnectionEstablished();
+    void onNetworkConnectionClosed();
+    void onNetworkError(const QString& error);
+
 private:
     void initializeGameModel();
     void updateBattleFields();
     void showTurnMessage(int player);
     void refreshShipOverlaysForCurrentPlayer();
+    void startNetworkGame(bool isServer);
+    void cleanupNetwork();
 
 private:
     QStackedWidget* m_stackedWidget;
     WelcomeScreen* m_welcomeScreen;
     GameScreen* m_gameScreen;
     std::unique_ptr<GameModelAdapter> m_gameModel;
+    std::unique_ptr<SeaBattle::NetworkAdapter> m_networkAdapter;
+    std::unique_ptr<SeaBattle::NetworkGameModel> m_networkGameModel;
+    
+    bool m_isNetworkGame;
+    bool m_isServer;
+    ServerSettingsDialog* m_serverDialog;
+    ClientSettingsDialog* m_clientDialog;
+    
+    // Track enemy field state for network games
+    std::array<SeaBattle::CellState, 100> m_enemyFieldState;
 };

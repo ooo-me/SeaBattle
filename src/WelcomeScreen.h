@@ -10,4 +10,6 @@ public:
 
 signals:
     void startGameRequested();
+    void createServerRequested();
+    void joinGameRequested();
 };

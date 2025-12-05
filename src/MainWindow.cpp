@@ -4,12 +4,23 @@
 #include "GameScreen.h"
 #include "ModelAdapter.h"
 #include "WelcomeScreen.h"
+#include "NetworkAdapter.h"
+#include "NetworkGameModel.h"
+#include "ServerSettingsDialog.h"
+#include "ClientSettingsDialog.h"
+#include "Protocol.h"
 
 #include <QStackedWidget>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
+    , m_isNetworkGame(false)
+    , m_isServer(false)
+    , m_serverDialog(nullptr)
+    , m_clientDialog(nullptr)
 {
+    // Initialize enemy field state
+    m_enemyFieldState.fill(SeaBattle::CellState::Empty);
     setWindowTitle("Морской Бой");
     setMinimumSize(1280, 720);
 
@@ -27,6 +38,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Подключаем сигналы
     connect(m_welcomeScreen, &WelcomeScreen::startGameRequested, this, &MainWindow::showGameScreen);
+    connect(m_welcomeScreen, &WelcomeScreen::createServerRequested, this, &MainWindow::onCreateServerRequested);
+    connect(m_welcomeScreen, &WelcomeScreen::joinGameRequested, this, &MainWindow::onJoinGameRequested);
     connect(m_gameScreen, &GameScreen::returnToMainMenu, this, &MainWindow::showWelcomeScreen);
     connect(m_gameScreen, &GameScreen::cellClicked, this, &MainWindow::onCellClicked);
     connect(m_gameScreen, &GameScreen::exitGameRequested, this, &MainWindow::onExitGameRequested);
@@ -36,6 +49,9 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::showGameScreen()
 {
+    // This is for local game mode
+    m_isNetworkGame = false;
+    
     m_stackedWidget->setCurrentWidget(m_gameScreen);
 
     // Полный сброс визуального состояния перед новой игрой
@@ -60,13 +76,41 @@ void MainWindow::showWelcomeScreen()
 
 void MainWindow::onCellClicked(int player, int row, int col)
 {
-    // Текущий игрок до выстрела
+    // In network game, send shot to opponent
+    if (m_isNetworkGame)
+    {
+        // In network mode, we want to validate that the correct field was clicked
+        // Player 1 field (left) is always our field - should be disabled
+        // Player 2 field (right) is always enemy field - should be enabled when it's our turn
+        // The player1Field should be disabled in network mode, so clicks shouldn't reach here
+        // But we validate the cell state anyway for safety
+        
+        int idx = row * SeaBattle::GameField::SIZE + col;
+        SeaBattle::CellState state = m_enemyFieldState[idx];
+        if (state != SeaBattle::CellState::Empty)
+        {
+            // Already shot this cell, ignore the click
+            return;
+        }
+        
+        // Send shot to opponent
+        m_networkAdapter->sendMessage(
+            SeaBattle::Network::createShotMessage(row, col));
+        
+        // Disable cells while waiting for response
+        m_gameScreen->getPlayer2Field()->disableAllCells();
+        
+        return;
+    }
+
+    // Local game logic
     int before = m_gameModel->getCurrentPlayer();
     if (player != before)
     {
         return;
     }
 
+    // Local game logic
     bool hit = m_gameModel->processShot(row, col);
 
     // Если попадание и игра не окончена — разрешаем ОСТАВШИЕСЯ незастреленные клетки на поле противника
@@ -187,6 +231,14 @@ void MainWindow::onGameStateChanged(SeaBattle::GameState state)
 void MainWindow::onExitGameRequested()
 {
     // Завершаем текущую игру и возвращаемся на экран приветствия
+    
+    // If it's a network game, send disconnect message and cleanup
+    if (m_isNetworkGame && m_networkAdapter)
+    {
+        m_networkAdapter->sendMessage(SeaBattle::Network::createDisconnectMessage());
+        cleanupNetwork();
+    }
+    
     // Инициализируем новую модель для следующей игры
     initializeGameModel();
     
@@ -283,9 +335,288 @@ void MainWindow::refreshShipOverlaysForCurrentPlayer()
 
 void MainWindow::showTurnMessage(int player)
 {
+    // Don't show turn message in network games
+    if (m_isNetworkGame)
+    {
+        return;
+    }
+    
     QMessageBox msgBox;
     msgBox.setWindowTitle("Смена хода");
     msgBox.setText(QString("Ход игрока %1").arg(player + 1));
     msgBox.addButton("Продолжить", QMessageBox::AcceptRole);
     msgBox.exec();
+}
+
+void MainWindow::onCreateServerRequested()
+{
+    m_serverDialog = new ServerSettingsDialog(this);
+    
+    connect(m_serverDialog, &ServerSettingsDialog::startServerRequested, 
+            this, [this](int port) {
+        m_serverDialog->setWaitingForClient();
+        
+        m_networkAdapter = std::make_unique<SeaBattle::NetworkAdapter>();
+        
+        connect(m_networkAdapter.get(), &SeaBattle::NetworkAdapter::connectionEstablished,
+                this, &MainWindow::onNetworkConnectionEstablished);
+        connect(m_networkAdapter.get(), &SeaBattle::NetworkAdapter::messageReceived,
+                this, &MainWindow::onNetworkMessageReceived);
+        connect(m_networkAdapter.get(), &SeaBattle::NetworkAdapter::connectionClosed,
+                this, &MainWindow::onNetworkConnectionClosed);
+        connect(m_networkAdapter.get(), &SeaBattle::NetworkAdapter::errorOccurred,
+                this, &MainWindow::onNetworkError);
+        
+        try {
+            m_networkAdapter->startServer(port);
+            m_isServer = true;
+        } catch (const std::exception& e) {
+            m_serverDialog->setError(QString::fromStdString(e.what()));
+        }
+    });
+    
+    m_serverDialog->exec();
+}
+
+void MainWindow::onJoinGameRequested()
+{
+    m_clientDialog = new ClientSettingsDialog(this);
+    
+    connect(m_clientDialog, &ClientSettingsDialog::connectRequested,
+            this, [this](const QString& host, int port) {
+        m_clientDialog->setConnecting();
+        
+        m_networkAdapter = std::make_unique<SeaBattle::NetworkAdapter>();
+        
+        connect(m_networkAdapter.get(), &SeaBattle::NetworkAdapter::connectionEstablished,
+                this, &MainWindow::onNetworkConnectionEstablished);
+        connect(m_networkAdapter.get(), &SeaBattle::NetworkAdapter::messageReceived,
+                this, &MainWindow::onNetworkMessageReceived);
+        connect(m_networkAdapter.get(), &SeaBattle::NetworkAdapter::connectionClosed,
+                this, &MainWindow::onNetworkConnectionClosed);
+        connect(m_networkAdapter.get(), &SeaBattle::NetworkAdapter::errorOccurred,
+                this, &MainWindow::onNetworkError);
+        
+        try {
+            m_networkAdapter->connectToServer(host.toStdString(), port);
+            m_isServer = false;
+        } catch (const std::exception& e) {
+            m_clientDialog->setError(QString::fromStdString(e.what()));
+        }
+    });
+    
+    m_clientDialog->exec();
+}
+
+void MainWindow::onNetworkConnectionEstablished()
+{
+    // Close dialogs
+    if (m_serverDialog)
+    {
+        m_serverDialog->accept();
+        m_serverDialog = nullptr;
+    }
+    if (m_clientDialog)
+    {
+        m_clientDialog->accept();
+        m_clientDialog = nullptr;
+    }
+    
+    // Start network game
+    startNetworkGame(m_isServer);
+}
+
+void MainWindow::onNetworkMessageReceived(const SeaBattle::Network::Message& message)
+{
+    using namespace SeaBattle::Network;
+    
+    switch (message.type)
+    {
+        case MessageType::GameStart:
+        {
+            auto start = GameStartMessage::fromJson(message.payload);
+            // This is just confirmation, we already know our role
+            break;
+        }
+        
+        case MessageType::Shot:
+        {
+            auto shot = ShotMessage::fromJson(message.payload);
+            // Opponent is shooting at our field
+            
+            bool destroyed = false;
+            bool hit = m_networkGameModel->processOpponentShot(shot.row, shot.col, destroyed);
+            
+            // Update our field display
+            BattleField* myField = m_gameScreen->getPlayer1Field(); // We always see ourselves on left
+            if (hit)
+            {
+                myField->markHit(shot.row, shot.col);
+            }
+            else
+            {
+                myField->markMiss(shot.row, shot.col);
+            }
+            
+            // Send result back
+            m_networkAdapter->sendMessage(
+                createShotResultMessage(shot.row, shot.col, hit, destroyed));
+            
+            // Check if we lost
+            if (m_networkGameModel->allShipsDestroyed())
+            {
+                // We lost, opponent wins
+                // Server is player 0, client is player 1
+                int winner = m_isServer ? 1 : 0; // Opponent wins
+                m_networkAdapter->sendMessage(createGameOverMessage(winner));
+                onGameOver(winner);
+            }
+            
+            // If opponent hit, they continue, otherwise it's our turn
+            if (!hit)
+            {
+                // Enable enemy field for shooting
+                m_gameScreen->getPlayer2Field()->enableUnshotCells();
+            }
+            break;
+        }
+        
+        case MessageType::ShotResult:
+        {
+            auto result = ShotResultMessage::fromJson(message.payload);
+            // Result of our shot on enemy field
+            BattleField* enemyField = m_gameScreen->getPlayer2Field(); // Enemy is always on right
+            
+            // Track enemy field state
+            int idx = result.row * SeaBattle::GameField::SIZE + result.col;
+            if (result.hit)
+            {
+                enemyField->markHit(result.row, result.col);
+                m_enemyFieldState[idx] = result.destroyed ? 
+                    SeaBattle::CellState::Destroyed : SeaBattle::CellState::Hit;
+                // If we hit, we can shoot again
+                enemyField->enableUnshotCells();
+            }
+            else
+            {
+                enemyField->markMiss(result.row, result.col);
+                m_enemyFieldState[idx] = SeaBattle::CellState::Miss;
+                // If we missed, wait for opponent's turn
+                enemyField->disableAllCells();
+            }
+            
+            break;
+        }
+        
+        case MessageType::GameOver:
+        {
+            auto gameOver = GameOverMessage::fromJson(message.payload);
+            onGameOver(gameOver.winner);
+            break;
+        }
+        
+        case MessageType::Disconnect:
+        {
+            QMessageBox::information(this, "Соединение", 
+                "Противник отключился от игры");
+            showWelcomeScreen();
+            cleanupNetwork();
+            break;
+        }
+        
+        case MessageType::Error:
+        {
+            auto error = ErrorMessage::fromJson(message.payload);
+            QMessageBox::warning(this, "Ошибка", 
+                QString::fromStdString(error.message));
+            break;
+        }
+        
+        default:
+            break;
+    }
+}
+
+void MainWindow::onNetworkConnectionClosed()
+{
+    if (m_isNetworkGame)
+    {
+        QMessageBox::information(this, "Соединение", 
+            "Соединение с противником закрыто");
+        showWelcomeScreen();
+        cleanupNetwork();
+    }
+}
+
+void MainWindow::onNetworkError(const QString& error)
+{
+    QMessageBox::critical(this, "Сетевая ошибка", error);
+    
+    if (m_serverDialog)
+    {
+        m_serverDialog->setError(error);
+    }
+    if (m_clientDialog)
+    {
+        m_clientDialog->setError(error);
+    }
+}
+
+void MainWindow::startNetworkGame(bool isServer)
+{
+    m_isNetworkGame = true;
+    m_isServer = isServer;
+    
+    // Initialize enemy field state
+    m_enemyFieldState.fill(SeaBattle::CellState::Empty);
+    
+    // Create network game model
+    m_networkGameModel = std::make_unique<SeaBattle::NetworkGameModel>();
+    
+    // Send game start message
+    m_networkAdapter->sendMessage(
+        SeaBattle::Network::createGameStartMessage(isServer));
+    
+    // Start the game
+    m_stackedWidget->setCurrentWidget(m_gameScreen);
+    m_gameScreen->getPlayer1Field()->clearAll();
+    m_gameScreen->getPlayer2Field()->clearAll();
+    
+    // Display our ships on the left field
+    BattleField* myField = m_gameScreen->getPlayer1Field();
+    for (const auto& ship : m_networkGameModel->getMyShips())
+    {
+        for (const auto& pos : ship.positions)
+        {
+            myField->markShip(pos.first, pos.second);
+        }
+    }
+    
+    // In network mode, always disable our own field (can't shoot ourselves)
+    myField->disableAllCells();
+    
+    m_gameScreen->setExitButtonVisible(true);
+    
+    // Server always starts first
+    if (isServer)
+    {
+        m_gameScreen->getPlayer2Field()->enableUnshotCells();
+    }
+    else
+    {
+        // Client waits for server's first move
+        m_gameScreen->getPlayer2Field()->disableAllCells();
+    }
+}
+
+void MainWindow::cleanupNetwork()
+{
+    if (m_networkAdapter)
+    {
+        m_networkAdapter->stop();
+        m_networkAdapter.reset();
+    }
+    m_networkGameModel.reset();
+    m_isNetworkGame = false;
+    m_isServer = false;
 }
