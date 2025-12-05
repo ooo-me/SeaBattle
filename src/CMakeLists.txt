@@ -52,18 +52,6 @@ install(TARGETS SeaBattleServer
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-# Test client executable (for testing purposes)
-add_executable(SeaBattleTestClient
-	"GameProtocol.h"
-	"test_client.cpp"
-)
-
-target_link_libraries(SeaBattleTestClient PRIVATE
-	Boost::system
-)
-
-target_compile_features(SeaBattleTestClient PRIVATE cxx_std_20)
-
 if(Qt6_FOUND)
     set(deploy_tool_options_arg
         --no-system-d3d-compiler
