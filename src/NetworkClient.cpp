@@ -313,25 +313,32 @@ namespace SeaBattle::Network
 
     void NetworkClient::processSendQueue()
     {
-        std::lock_guard<std::mutex> lock(sendMutex_);
-
-        if (sending_ || sendQueue_.empty())
+        std::vector<uint8_t> dataToSend;
+        
         {
-            return;
+            std::lock_guard<std::mutex> lock(sendMutex_);
+
+            if (sending_ || sendQueue_.empty())
+            {
+                return;
+            }
+
+            if (status_ != ConnectionStatus::Connected)
+            {
+                return;
+            }
+
+            sending_ = true;
+            // Copy data from queue to avoid holding reference after lock release
+            dataToSend = sendQueue_.front();
         }
 
-        if (status_ != ConnectionStatus::Connected)
-        {
-            return;
-        }
-
-        sending_ = true;
-        auto& data = sendQueue_.front();
-
+        // Now perform async write with copied data
+        auto sharedData = std::make_shared<std::vector<uint8_t>>(std::move(dataToSend));
         boost::asio::async_write(
             socket_,
-            boost::asio::buffer(data),
-            [this](const boost::system::error_code& error, size_t bytesTransferred) {
+            boost::asio::buffer(*sharedData),
+            [this, sharedData](const boost::system::error_code& error, size_t bytesTransferred) {
                 handleSend(error, bytesTransferred);
             });
     }

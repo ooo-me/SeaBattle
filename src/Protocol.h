@@ -145,7 +145,14 @@ namespace SeaBattle::Network
     public:
         ShootRequestMessage() : Message(MessageType::ShootRequest), row_(0), col_(0) {}
         ShootRequestMessage(int row, int col) 
-            : Message(MessageType::ShootRequest), row_(row), col_(col) {}
+            : Message(MessageType::ShootRequest), row_(row), col_(col) 
+        {
+            // Validate coordinates are in valid range
+            if (row < 0 || row > 255 || col < 0 || col > 255)
+            {
+                throw std::invalid_argument("Coordinates must be in range [0, 255]");
+            }
+        }
         
         int getRow() const { return row_; }
         int getCol() const { return col_; }

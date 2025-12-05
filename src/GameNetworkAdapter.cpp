@@ -212,13 +212,16 @@ namespace SeaBattle::Network
 
     void GameNetworkAdapter::handleShootResponse(const ShootResponseMessage& response)
     {
-        // Extract row/col from context (would need to be stored in real implementation)
-        // For now, just notify about the hit result
+        // Note: In a complete implementation, we would track pending shots to match
+        // responses with requests. For this prototype, we use sentinel values to
+        // indicate that coordinate tracking is not yet implemented.
+        constexpr int UNKNOWN_COORDINATE = -1;
+        
         if (gameActionCallback_)
         {
-            // In a real implementation, we'd need to track which shot this response is for
-            // For this prototype, we just signal the result
-            gameActionCallback_(-1, -1, response.isHit());
+            // TODO: Implement shot tracking to correlate responses with requests
+            // For now, notify with unknown coordinates and hit result
+            gameActionCallback_(UNKNOWN_COORDINATE, UNKNOWN_COORDINATE, response.isHit());
         }
     }
 
