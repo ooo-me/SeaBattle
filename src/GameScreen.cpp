@@ -233,7 +233,7 @@ void GameScreen::setConnectionStatus(ConnectionStatus status)
         break;
     case ConnectionStatus::Timeout:
         statusText = "Статус: Таймаут";
-        styleSheet += "background-color: #FF9800;"; // Оранжевый (тёмный)
+        styleSheet += "background-color: #FF9800;"; // Оранжевый (тёмнее)
         break;
     case ConnectionStatus::Disconnected:
         statusText = "Статус: Разрыв связи";

@@ -3,6 +3,10 @@
 
 #include <QTimer>
 
+namespace {
+    constexpr int CONNECTION_SIMULATION_DELAY_MS = 1000; // Задержка симуляции подключения
+}
+
 NetworkClient::NetworkClient(QObject* parent)
     : QObject(parent)
     , m_currentStatus(ConnectionStatus::Disconnected)
@@ -16,7 +20,7 @@ void NetworkClient::connectToServer(const QString& host, int port)
     
     // Имитация подключения с задержкой
     // В реальной реализации здесь будет сетевой код
-    QTimer::singleShot(1000, this, [this]() {
+    QTimer::singleShot(CONNECTION_SIMULATION_DELAY_MS, this, [this]() {
         // Имитируем успешное подключение
         setStatus(ConnectionStatus::Connected);
     });
