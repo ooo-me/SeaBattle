@@ -9,6 +9,8 @@
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
+    , m_connectionDialog(nullptr)
+    , m_isNetworkGame(false)
 {
     setWindowTitle("Морской Бой");
     setMinimumSize(1280, 720);
@@ -27,6 +29,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Подключаем сигналы
     connect(m_welcomeScreen, &WelcomeScreen::startGameRequested, this, &MainWindow::showGameScreen);
+    connect(m_welcomeScreen, &WelcomeScreen::createNetworkGameRequested, this, &MainWindow::onCreateNetworkGame);
+    connect(m_welcomeScreen, &WelcomeScreen::joinNetworkGameRequested, this, &MainWindow::onJoinNetworkGame);
     connect(m_gameScreen, &GameScreen::returnToMainMenu, this, &MainWindow::showWelcomeScreen);
     connect(m_gameScreen, &GameScreen::cellClicked, this, &MainWindow::onCellClicked);
     connect(m_gameScreen, &GameScreen::exitGameRequested, this, &MainWindow::onExitGameRequested);
@@ -56,6 +60,9 @@ void MainWindow::showWelcomeScreen()
     
     // Скрываем кнопку выхода на экране приветствия
     m_gameScreen->setExitButtonVisible(false);
+    
+    // Сбрасываем флаг сетевой игры
+    m_isNetworkGame = false;
 }
 
 void MainWindow::onCellClicked(int player, int row, int col)
@@ -283,9 +290,88 @@ void MainWindow::refreshShipOverlaysForCurrentPlayer()
 
 void MainWindow::showTurnMessage(int player)
 {
+    // В сетевом режиме не показываем сообщение о смене хода
+    if (m_isNetworkGame)
+    {
+        return;
+    }
+
     QMessageBox msgBox;
     msgBox.setWindowTitle("Смена хода");
     msgBox.setText(QString("Ход игрока %1").arg(player + 1));
     msgBox.addButton("Продолжить", QMessageBox::AcceptRole);
     msgBox.exec();
+}
+
+void MainWindow::onCreateNetworkGame(int port)
+{
+    m_isNetworkGame = true;
+    showConnectionWaitingDialog(true, QString("Ожидание подключения на порту %1...").arg(port));
+    
+    // TODO: Здесь будет реализация создания сетевого сервера
+    // После успешного подключения:
+    // hideConnectionWaitingDialog();
+    // showGameScreen();
+    
+    // Временная заглушка: показываем сообщение и скрываем диалог
+    QTimer::singleShot(2000, this, [this]() {
+        hideConnectionWaitingDialog();
+        QMessageBox::information(this, "Сетевой режим", 
+                                "Сетевой режим пока в разработке.\nЗапускается локальная игра.");
+        m_isNetworkGame = false;
+        showGameScreen();
+    });
+}
+
+void MainWindow::onJoinNetworkGame(const QString& host, int port)
+{
+    m_isNetworkGame = true;
+    showConnectionWaitingDialog(false, QString("Подключение к %1:%2...").arg(host).arg(port));
+    
+    // TODO: Здесь будет реализация подключения к сетевому серверу
+    // После успешного подключения:
+    // hideConnectionWaitingDialog();
+    // showGameScreen();
+    
+    // Временная заглушка: показываем сообщение и скрываем диалог
+    QTimer::singleShot(2000, this, [this]() {
+        hideConnectionWaitingDialog();
+        QMessageBox::information(this, "Сетевой режим", 
+                                "Сетевой режим пока в разработке.\nЗапускается локальная игра.");
+        m_isNetworkGame = false;
+        showGameScreen();
+    });
+}
+
+void MainWindow::showConnectionWaitingDialog(bool isHost, const QString& info)
+{
+    if (!m_connectionDialog)
+    {
+        m_connectionDialog = new QProgressDialog(this);
+        m_connectionDialog->setWindowTitle("Сетевая игра");
+        m_connectionDialog->setWindowModality(Qt::WindowModal);
+        m_connectionDialog->setMinimumDuration(0);
+        m_connectionDialog->setRange(0, 0); // Indeterminate progress
+    }
+    
+    m_connectionDialog->setLabelText(info);
+    
+    // Настраиваем кнопку отмены
+    m_connectionDialog->setCancelButtonText("Отмена");
+    connect(m_connectionDialog, &QProgressDialog::canceled, this, [this]() {
+        hideConnectionWaitingDialog();
+        m_isNetworkGame = false;
+        // TODO: Отменить сетевое подключение
+    });
+    
+    m_connectionDialog->show();
+}
+
+void MainWindow::hideConnectionWaitingDialog()
+{
+    if (m_connectionDialog)
+    {
+        m_connectionDialog->hide();
+        m_connectionDialog->disconnect();
+    }
 }

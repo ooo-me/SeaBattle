@@ -10,4 +10,10 @@ public:
 
 signals:
     void startGameRequested();
+    void createNetworkGameRequested(int port);
+    void joinNetworkGameRequested(const QString& host, int port);
+
+private slots:
+    void onCreateGameClicked();
+    void onJoinGameClicked();
 };

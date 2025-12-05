@@ -16,3 +16,7 @@
 #include <QFrame>
 #include <QMessageBox>
 #include <QVector>
+#include <QInputDialog>
+#include <QLineEdit>
+#include <QProgressDialog>
+#include <QTimer>
