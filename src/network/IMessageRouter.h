@@ -74,13 +74,10 @@ namespace SeaBattle::Network
             }
 
             std::string messageType = handler->getMessageType();
-            if (m_handlers.find(messageType) != m_handlers.end())
-            {
-                return false; // Handler already registered
-            }
-
-            m_handlers[messageType] = std::move(handler);
-            return true;
+            
+            // Use insert to check existence and insert in single operation
+            auto result = m_handlers.insert({messageType, std::move(handler)});
+            return result.second; // true if inserted, false if already exists
         }
 
         bool unregisterHandler(const std::string& messageType) override
