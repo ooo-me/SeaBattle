@@ -29,6 +29,13 @@ GameScreen::GameScreen(QWidget* parent)
     m_exitButton = new QPushButton("Выход из игры");
     m_exitButton->setStyleSheet("font-size: 14px; padding: 10px;");
     m_exitButton->setVisible(false); // Изначально скрыта
+    
+    // Создаём статус бар для отображения состояния подключения
+    m_statusBar = new QLabel("Статус: Не подключен");
+    m_statusBar->setStyleSheet("font-size: 14px; padding: 10px; background-color: #555; color: white; border-radius: 5px;");
+    m_statusBar->setAlignment(Qt::AlignCenter);
+    m_statusBar->setMinimumWidth(250);
+    m_statusBar->setVisible(false); // Изначально скрыт
 
     // Собираем layout для игровых полей
     m_fieldsLayout->addLayout(m_leftLayout);
@@ -36,7 +43,8 @@ GameScreen::GameScreen(QWidget* parent)
 
     // Создаём горизонтальный layout для кнопок внизу
     m_buttonsLayout = new QHBoxLayout();
-    m_buttonsLayout->addStretch(); // Растягивающий элемент слева для выравнивания кнопки вправо
+    m_buttonsLayout->addWidget(m_statusBar); // Статус бар слева
+    m_buttonsLayout->addStretch(); // Растягивающий элемент для разделения статус бара и кнопки
     m_buttonsLayout->addWidget(m_exitButton);
     
     // Создаём контейнер для layout кнопок
@@ -202,4 +210,38 @@ void GameScreen::setExitButtonVisible(bool visible)
 {
     // Устанавливаем видимость кнопки выхода
     m_exitButton->setVisible(visible);
+}
+
+void GameScreen::setConnectionStatus(ConnectionStatus status)
+{
+    QString statusText;
+    QString styleSheet = "font-size: 14px; padding: 10px; border-radius: 5px; color: white; ";
+    
+    switch (status)
+    {
+    case ConnectionStatus::Waiting:
+        statusText = "Статус: Ожидание...";
+        styleSheet += "background-color: #FFA500;"; // Оранжевый
+        break;
+    case ConnectionStatus::Connected:
+        statusText = "Статус: Подключено";
+        styleSheet += "background-color: #4CAF50;"; // Зелёный
+        break;
+    case ConnectionStatus::Error:
+        statusText = "Статус: Ошибка";
+        styleSheet += "background-color: #F44336;"; // Красный
+        break;
+    case ConnectionStatus::Timeout:
+        statusText = "Статус: Таймаут";
+        styleSheet += "background-color: #FF9800;"; // Оранжевый (тёмный)
+        break;
+    case ConnectionStatus::Disconnected:
+        statusText = "Статус: Разрыв связи";
+        styleSheet += "background-color: #9E9E9E;"; // Серый
+        break;
+    }
+    
+    m_statusBar->setText(statusText);
+    m_statusBar->setStyleSheet(styleSheet);
+    m_statusBar->setVisible(true);
 }

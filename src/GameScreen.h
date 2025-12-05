@@ -8,6 +8,15 @@ namespace SeaBattle
     enum class CellState;
 }
 
+enum class ConnectionStatus
+{
+    Waiting,      // Ожидание подключения
+    Connected,    // Успешное подключение
+    Error,        // Ошибка подключения
+    Timeout,      // Таймаут подключения
+    Disconnected  // Разрыв соединения
+};
+
 class GameScreen : public QWidget
 {
     Q_OBJECT
@@ -19,6 +28,9 @@ public:
     
     // Показать/скрыть кнопку выхода в зависимости от состояния игры
     void setExitButtonVisible(bool visible);
+    
+    // Установить статус подключения
+    void setConnectionStatus(ConnectionStatus status);
 
 public slots:
     void onPlayerSwitched(int newPlayer);
@@ -50,4 +62,5 @@ private:
     QLabel* m_player1Label;
     QLabel* m_player2Label;
     QPushButton* m_exitButton; // Кнопка выхода из игры
+    QLabel* m_statusBar; // Статус бар для отображения состояния подключения
 };

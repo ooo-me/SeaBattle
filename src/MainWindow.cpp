@@ -4,6 +4,7 @@
 #include "GameScreen.h"
 #include "ModelAdapter.h"
 #include "WelcomeScreen.h"
+#include "NetworkClient.h"
 
 #include <QStackedWidget>
 
@@ -24,6 +25,16 @@ MainWindow::MainWindow(QWidget* parent)
     m_stackedWidget->addWidget(m_gameScreen);
 
     initializeGameModel();
+    
+    // Инициализируем сетевой клиент
+    m_networkClient = std::make_unique<NetworkClient>(this);
+    
+    // Устанавливаем callback для обновления статуса подключения
+    m_networkClient->setStatusCallback([this](ConnectionStatus status) {
+        QMetaObject::invokeMethod(this, [this, status]() {
+            onConnectionStatusChanged(status);
+        });
+    });
 
     // Подключаем сигналы
     connect(m_welcomeScreen, &WelcomeScreen::startGameRequested, this, &MainWindow::showGameScreen);
@@ -48,6 +59,10 @@ void MainWindow::showGameScreen()
     
     // Показываем кнопку выхода, так как игра началась (состояние Playing)
     m_gameScreen->setExitButtonVisible(true);
+    
+    // Демонстрация работы статус бара - имитируем подключение
+    // В реальной реализации это будет происходить при настоящем подключении к серверу
+    m_networkClient->connectToServer("localhost", 12345);
 }
 
 void MainWindow::showWelcomeScreen()
@@ -190,12 +205,21 @@ void MainWindow::onExitGameRequested()
     // Инициализируем новую модель для следующей игры
     initializeGameModel();
     
+    // Отключаемся от сервера
+    m_networkClient->disconnect();
+    
     // Очищаем игровые поля
     m_gameScreen->getPlayer1Field()->clearAll();
     m_gameScreen->getPlayer2Field()->clearAll();
     
     // Переходим на экран приветствия
     showWelcomeScreen();
+}
+
+void MainWindow::onConnectionStatusChanged(ConnectionStatus status)
+{
+    // Обновляем статус бар на экране игры
+    m_gameScreen->setConnectionStatus(status);
 }
 
 void MainWindow::initializeGameModel()
