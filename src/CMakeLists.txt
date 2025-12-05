@@ -1,3 +1,4 @@
+# GUI application
 qt_add_executable(SeaBattle WIN32
 	"BattleField.cpp"
 	"BattleField.h"
@@ -25,6 +26,27 @@ target_link_libraries(SeaBattle PRIVATE
 
 install(TARGETS SeaBattle
     BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# Server executable (no GUI/Qt dependencies)
+find_package(Boost REQUIRED COMPONENTS system)
+
+add_executable(SeaBattleServer
+	"GameServer.cpp"
+	"GameServer.h"
+	"GameProtocol.h"
+	"Model.h"
+	"server_main.cpp"
+)
+
+target_link_libraries(SeaBattleServer PRIVATE
+	Boost::system
+)
+
+target_compile_features(SeaBattleServer PRIVATE cxx_std_20)
+
+install(TARGETS SeaBattleServer
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
