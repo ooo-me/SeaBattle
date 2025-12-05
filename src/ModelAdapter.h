@@ -1,8 +1,10 @@
 #pragma once
 
-#include "model.h"
+#include "IGameModelSource.h"
+#include "Model.h"
 
 #include <functional>
+#include <memory>
 
 class GameModelAdapter
 {
@@ -12,7 +14,8 @@ public:
     using PlayerSwitchCallback = std::function<void(int newPlayer)>;
     using GameOverCallback = std::function<void(int winner)>;
 
-    GameModelAdapter();
+    // Конструктор с возможностью выбора источника (локальный по умолчанию)
+    explicit GameModelAdapter(std::unique_ptr<SeaBattle::IGameModelSource> source = nullptr);
 
     void startGame();
     bool processShot(int row, int col);
@@ -21,8 +24,8 @@ public:
     SeaBattle::CellState getPlayerCellState(int player, int row, int col) const;
     SeaBattle::CellState getEnemyCellState(int player, int row, int col) const;
     const std::vector<SeaBattle::Ship>& getPlayerShips(int player) const;
-    int getCurrentPlayer() const { return model->getCurrentPlayer(); }
-    SeaBattle::GameState getGameState() const { return model->getGameState(); }
+    int getCurrentPlayer() const { return modelSource->getCurrentPlayer(); }
+    SeaBattle::GameState getGameState() const { return modelSource->getGameState(); }
 
     // Установка callback'ов
     void setCellUpdateCallback(CellUpdateCallback callback) { cellUpdateCallback = callback; }
@@ -30,8 +33,13 @@ public:
     void setPlayerSwitchCallback(PlayerSwitchCallback callback) { playerSwitchCallback = callback; }
     void setGameOverCallback(GameOverCallback callback) { gameOverCallback = callback; }
 
+    // Метод для смены источника игровой модели (локальный/сетевой)
+    void setModelSource(std::unique_ptr<SeaBattle::IGameModelSource> source);
+
 private:
-    std::unique_ptr<SeaBattle::GameModel> model;
+    void handleGameEvent(const SeaBattle::GameEvent& event);
+
+    std::unique_ptr<SeaBattle::IGameModelSource> modelSource;
 
     CellUpdateCallback cellUpdateCallback;
     GameStateCallback gameStateCallback;
