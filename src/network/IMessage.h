@@ -122,6 +122,15 @@ namespace SeaBattle::Network
 
     /**
      * @brief Factory for creating messages from JSON
+     * 
+     * This class provides static methods for deserializing messages from JSON.
+     * The implementation should be provided in a separate .cpp file to avoid
+     * circular dependencies and to allow for dynamic message type registration.
+     * 
+     * Implementation should:
+     * 1. Parse the JSON and extract the "type" field
+     * 2. Call the appropriate Message::fromJson() static method based on type
+     * 3. Return the created message or nullptr on error
      */
     class MessageFactory
     {
@@ -130,6 +139,17 @@ namespace SeaBattle::Network
          * @brief Create a message from JSON data
          * @param json JSON object containing message data
          * @return Unique pointer to the created message, or nullptr if creation failed
+         * 
+         * @note Implementation required in MessageFactory.cpp
+         * 
+         * Example implementation:
+         * @code
+         * auto type = json["type"].get<std::string>();
+         * if (type == "shot") return ShotMessage::fromJson(json);
+         * if (type == "shot_response") return ShotResponseMessage::fromJson(json);
+         * // ... other message types
+         * return nullptr;
+         * @endcode
          */
         static std::unique_ptr<IMessage> createFromJson(const nlohmann::json& json);
 
@@ -137,6 +157,18 @@ namespace SeaBattle::Network
          * @brief Parse JSON string and create a message
          * @param jsonString JSON string containing message data
          * @return Unique pointer to the created message, or nullptr if parsing/creation failed
+         * 
+         * @note Implementation required in MessageFactory.cpp
+         * 
+         * Example implementation:
+         * @code
+         * try {
+         *     nlohmann::json json = nlohmann::json::parse(jsonString);
+         *     return createFromJson(json);
+         * } catch (const std::exception&) {
+         *     return nullptr;
+         * }
+         * @endcode
          */
         static std::unique_ptr<IMessage> createFromString(const std::string& jsonString);
     };

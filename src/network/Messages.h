@@ -7,6 +7,22 @@
 namespace SeaBattle::Network
 {
     /**
+     * @file Messages.h
+     * @brief Message type definitions for SeaBattle network protocol
+     * 
+     * This file contains declarations for all protocol message types.
+     * Each message class includes:
+     * - Constructor for creating messages programmatically
+     * - static fromJson() method for deserialization (implementation in Messages.cpp)
+     * - getPayload() method for serialization (implemented inline)
+     * - validatePayload() method for validation (implemented inline)
+     * 
+     * All fromJson() methods should be implemented in Messages.cpp to:
+     * 1. Extract and validate the payload from JSON
+     * 2. Create and return a new message instance
+     * 3. Return nullptr if deserialization fails
+     */
+    /**
      * @brief Shot message - player taking a shot at opponent's field
      */
     class ShotMessage : public BaseMessage
@@ -19,6 +35,26 @@ namespace SeaBattle::Network
         {
         }
 
+        /**
+         * @brief Create ShotMessage from JSON
+         * @param json JSON object containing message data
+         * @return Unique pointer to created message, or nullptr on error
+         * 
+         * @note Implementation required in Messages.cpp
+         * 
+         * Expected JSON structure:
+         * @code
+         * {
+         *   "type": "shot",
+         *   "version": "1.0",
+         *   "timestamp": 123456,
+         *   "payload": {
+         *     "row": 5,
+         *     "col": 3
+         *   }
+         * }
+         * @endcode
+         */
         static std::unique_ptr<ShotMessage> fromJson(const nlohmann::json& json);
 
         int getRow() const { return m_row; }

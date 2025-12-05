@@ -120,13 +120,20 @@ TCP/IP (Qt Network or Standard Sockets)
 - Usage examples
 - Header file interfaces
 
-### 🔜 Future Implementation
-- Concrete implementations of network classes
+### 🔜 Future Implementation (Not part of this PR)
+- Concrete implementations (.cpp files) for:
+  - MessageFactory::createFromJson() and createFromString()
+  - All Message::fromJson() static methods
+  - Concrete handler implementations
+  - Concrete network client/server classes
 - Qt-specific TCP implementations
 - Integration with existing game model
 - Unit tests
 - Integration tests
 - UI integration
+
+**Note**: This PR provides the complete design, specifications, and interface definitions.
+The actual implementation of these interfaces will be done in future PRs.
 
 ## 📦 Dependencies
 
