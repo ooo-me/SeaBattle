@@ -15,6 +15,8 @@ namespace SeaBattle
 
     struct ShotResult
     {
+        int row;
+        int col;
         bool hit;
         CellState resultState;
         bool gameOver;

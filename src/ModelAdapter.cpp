@@ -28,8 +28,7 @@ void GameModelAdapter::initializeActionSource()
         // Notify about cell update
         if (cellUpdateCallback)
         {
-            cellUpdateCallback(player, result.resultState == SeaBattle::CellState::Empty ? -1 : player,
-                               0, 0, result.resultState);
+            cellUpdateCallback(player, result.row, result.col, result.resultState);
         }
 
         // Check for game over

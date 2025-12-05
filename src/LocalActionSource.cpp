@@ -71,6 +71,8 @@ namespace SeaBattle
 
         // Prepare result
         ShotResult result;
+        result.row = row;
+        result.col = col;
         result.hit = hit;
         result.resultState = resultState;
         result.gameOver = (m_model->getGameState() == GameState::GameOver);
