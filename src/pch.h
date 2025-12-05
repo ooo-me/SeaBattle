@@ -16,3 +16,5 @@
 #include <QFrame>
 #include <QMessageBox>
 #include <QVector>
+#include <QTimer>
+#include <QMetaObject>

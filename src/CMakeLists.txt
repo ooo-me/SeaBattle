@@ -9,6 +9,8 @@ qt_add_executable(SeaBattle WIN32
 	"Model.h"
 	"ModelAdapter.cpp"
 	"ModelAdapter.h"
+	"NetworkClient.cpp"
+	"NetworkClient.h"
 	"pch.h"
 	"WelcomeScreen.cpp"
 	"WelcomeScreen.h"
