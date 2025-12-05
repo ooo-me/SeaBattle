@@ -1,6 +1,7 @@
 #include "GameServer.h"
 #include <iostream>
 #include <istream>
+#include <random>
 
 namespace SeaBattle
 {
@@ -48,7 +49,7 @@ namespace SeaBattle
                     std::getline(is, message);
                     
                     std::cout << "[Server] Received: " << message << std::endl;
-                    handleMessage(message + "\n");
+                    handleMessage(message);
                     
                     if (state_ != SessionState::Closed && state_ != SessionState::GameOver)
                     {
@@ -236,11 +237,15 @@ namespace SeaBattle
             std::cout << "[Server] AI opponent's turn" << std::endl;
             
             // Simple AI: random shots
+            static std::random_device rd;
+            static std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, GameField::SIZE - 1);
+            
             bool aiContinues = true;
             while (aiContinues && gameModel_->getGameState() == GameState::Playing)
             {
-                int aiRow = rand() % GameField::SIZE;
-                int aiCol = rand() % GameField::SIZE;
+                int aiRow = dis(gen);
+                int aiCol = dis(gen);
                 
                 if (gameModel_->isValidShot(aiRow, aiCol))
                 {

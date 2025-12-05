@@ -32,7 +32,22 @@ int main(int argc, char* argv[])
         
         if (argc > 1)
         {
-            port = static_cast<unsigned short>(std::atoi(argv[1]));
+            try
+            {
+                int portValue = std::stoi(argv[1]);
+                if (portValue > 0 && portValue <= 65535)
+                {
+                    port = static_cast<unsigned short>(portValue);
+                }
+                else
+                {
+                    std::cerr << "[Server] Invalid port number. Using default port 8080." << std::endl;
+                }
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "[Server] Invalid port argument. Using default port 8080." << std::endl;
+            }
         }
         
         std::cout << "[Server] SeaBattle Server starting on port " << port << std::endl;
