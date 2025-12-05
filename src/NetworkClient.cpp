@@ -27,6 +27,21 @@ void NetworkClient::disconnect()
     setStatus(ConnectionStatus::Disconnected);
 }
 
+void NetworkClient::simulateTimeout()
+{
+    setStatus(ConnectionStatus::Timeout);
+}
+
+void NetworkClient::simulateError()
+{
+    setStatus(ConnectionStatus::Error);
+}
+
+void NetworkClient::simulateDisconnect()
+{
+    setStatus(ConnectionStatus::Disconnected);
+}
+
 void NetworkClient::setStatus(ConnectionStatus status)
 {
     if (m_currentStatus != status)

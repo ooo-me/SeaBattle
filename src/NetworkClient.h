@@ -23,6 +23,11 @@ public:
     // Получить текущий статус подключения
     ConnectionStatus getStatus() const { return m_currentStatus; }
     
+    // Симуляция различных состояний подключения (для демонстрации)
+    void simulateTimeout();
+    void simulateError();
+    void simulateDisconnect();
+    
     // Установить callback для изменения статуса
     void setStatusCallback(ConnectionStatusCallback callback) { m_statusCallback = callback; }
     

@@ -20,6 +20,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
+    
+    // Публичный метод для тестирования различных статусов подключения
+    NetworkClient* getNetworkClient() const { return m_networkClient.get(); }
 
 private slots:
     void showGameScreen();
