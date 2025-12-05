@@ -1,5 +1,12 @@
 #pragma once
 
+#include <vector>
+#include <array>
+#include <random>
+#include <algorithm>
+#include <stdexcept>
+#include <utility>
+
 namespace SeaBattle
 {
     enum class CellState
