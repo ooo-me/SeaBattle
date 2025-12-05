@@ -1,5 +1,6 @@
 [requires]
 qt/[~6]
+boost/[>=1.83]
 
 [generators]
 CMakeDeps
