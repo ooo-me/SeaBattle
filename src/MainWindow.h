@@ -13,6 +13,7 @@ namespace SeaBattle
     enum class CellState;
     enum class GameState;
     class NetworkAdapter;
+    class NetworkGameModel;
     namespace Network
     {
         struct Message;
@@ -59,9 +60,13 @@ private:
     GameScreen* m_gameScreen;
     std::unique_ptr<GameModelAdapter> m_gameModel;
     std::unique_ptr<SeaBattle::NetworkAdapter> m_networkAdapter;
+    std::unique_ptr<SeaBattle::NetworkGameModel> m_networkGameModel;
     
     bool m_isNetworkGame;
     bool m_isServer;
     ServerSettingsDialog* m_serverDialog;
     ClientSettingsDialog* m_clientDialog;
+    
+    // Track enemy field state for network games
+    std::array<SeaBattle::CellState, 100> m_enemyFieldState;
 };

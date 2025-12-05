@@ -17,6 +17,7 @@ qt_add_executable(SeaBattle WIN32
 	"ServerSession.h"
 	"ClientSession.h"
 	"NetworkAdapter.h"
+	"NetworkGameModel.h"
 	"ServerSettingsDialog.h"
 	"ClientSettingsDialog.h"
 )
