@@ -120,6 +120,8 @@ namespace SeaBattle::Network
         }
 
     private:
+        static constexpr size_t MAX_MESSAGE_SIZE = 65536; // 64KB max message size
+        
         void doRead()
         {
             auto self = shared_from_this();
@@ -127,6 +129,14 @@ namespace SeaBattle::Network
                 [this, self](boost::system::error_code ec, std::size_t length) {
                     if (!ec)
                     {
+                        // Check message size to prevent unbounded memory growth
+                        if (length > MAX_MESSAGE_SIZE)
+                        {
+                            notifyError("Message too large");
+                            close();
+                            return;
+                        }
+                        
                         std::istream is(&m_readBuffer);
                         std::string line;
                         std::getline(is, line);

@@ -63,14 +63,15 @@ namespace SeaBattle
             return myField.getShips();
         }
 
-        // Check if a shot is valid (for validation before sending)
-        bool isValidShot(int row, int col) const
+        // Check if coordinates are within valid range
+        // Note: This only validates boundaries, not whether the cell was already shot
+        // Enemy field state is tracked separately in MainWindow
+        bool isValidCoordinates(int row, int col) const
         {
             if (row < 0 || row >= GameField::SIZE || col < 0 || col >= GameField::SIZE)
             {
                 return false;
             }
-            // We don't know enemy field state, so we track it separately
             return true;
         }
 

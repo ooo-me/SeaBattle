@@ -79,17 +79,17 @@ void MainWindow::onCellClicked(int player, int row, int col)
     // In network game, send shot to opponent
     if (m_isNetworkGame)
     {
-        // In network mode, player field mapping is different
-        // We need to determine which field was clicked based on the field itself
-        // Player 2 field is always the enemy field (on the right)
-        // The 'player' parameter from GameScreen may not be reliable in network mode
-        // So we check if the cell was already shot in our enemy field state
+        // In network mode, we want to validate that the correct field was clicked
+        // Player 1 field (left) is always our field - should be disabled
+        // Player 2 field (right) is always enemy field - should be enabled when it's our turn
+        // The player1Field should be disabled in network mode, so clicks shouldn't reach here
+        // But we validate the cell state anyway for safety
         
-        int idx = row * 10 + col;
+        int idx = row * SeaBattle::GameField::SIZE + col;
         SeaBattle::CellState state = m_enemyFieldState[idx];
         if (state != SeaBattle::CellState::Empty)
         {
-            // Already shot this cell
+            // Already shot this cell, ignore the click
             return;
         }
         
@@ -465,6 +465,8 @@ void MainWindow::onNetworkMessageReceived(const SeaBattle::Network::Message& mes
             // Check if we lost
             if (m_networkGameModel->allShipsDestroyed())
             {
+                // We lost, opponent wins
+                // Server is player 0, client is player 1
                 int winner = m_isServer ? 1 : 0; // Opponent wins
                 m_networkAdapter->sendMessage(createGameOverMessage(winner));
                 onGameOver(winner);
@@ -486,7 +488,7 @@ void MainWindow::onNetworkMessageReceived(const SeaBattle::Network::Message& mes
             BattleField* enemyField = m_gameScreen->getPlayer2Field(); // Enemy is always on right
             
             // Track enemy field state
-            int idx = result.row * 10 + result.col;
+            int idx = result.row * SeaBattle::GameField::SIZE + result.col;
             if (result.hit)
             {
                 enemyField->markHit(result.row, result.col);
