@@ -19,6 +19,8 @@ MainWindow::MainWindow(QWidget* parent)
     , m_serverDialog(nullptr)
     , m_clientDialog(nullptr)
 {
+    // Initialize enemy field state
+    m_enemyFieldState.fill(SeaBattle::CellState::Empty);
     setWindowTitle("Морской Бой");
     setMinimumSize(1280, 720);
 
@@ -74,23 +76,15 @@ void MainWindow::showWelcomeScreen()
 
 void MainWindow::onCellClicked(int player, int row, int col)
 {
-    // Текущий игрок до выстрела
-    int before = m_gameModel->getCurrentPlayer();
-    if (player != before)
-    {
-        return;
-    }
-
     // In network game, send shot to opponent
     if (m_isNetworkGame)
     {
-        // Only allow clicking enemy field (player 2 field on right)
-        if (player != 1)
-        {
-            return;
-        }
+        // In network mode, player field mapping is different
+        // We need to determine which field was clicked based on the field itself
+        // Player 2 field is always the enemy field (on the right)
+        // The 'player' parameter from GameScreen may not be reliable in network mode
+        // So we check if the cell was already shot in our enemy field state
         
-        // Check if cell was already shot
         int idx = row * 10 + col;
         SeaBattle::CellState state = m_enemyFieldState[idx];
         if (state != SeaBattle::CellState::Empty)
@@ -106,6 +100,13 @@ void MainWindow::onCellClicked(int player, int row, int col)
         // Disable cells while waiting for response
         m_gameScreen->getPlayer2Field()->disableAllCells();
         
+        return;
+    }
+
+    // Local game logic
+    int before = m_gameModel->getCurrentPlayer();
+    if (player != before)
+    {
         return;
     }
 
@@ -230,6 +231,14 @@ void MainWindow::onGameStateChanged(SeaBattle::GameState state)
 void MainWindow::onExitGameRequested()
 {
     // Завершаем текущую игру и возвращаемся на экран приветствия
+    
+    // If it's a network game, send disconnect message and cleanup
+    if (m_isNetworkGame && m_networkAdapter)
+    {
+        m_networkAdapter->sendMessage(SeaBattle::Network::createDisconnectMessage());
+        cleanupNetwork();
+    }
+    
     // Инициализируем новую модель для следующей игры
     initializeGameModel();
     
@@ -580,6 +589,9 @@ void MainWindow::startNetworkGame(bool isServer)
             myField->markShip(pos.first, pos.second);
         }
     }
+    
+    // In network mode, always disable our own field (can't shoot ourselves)
+    myField->disableAllCells();
     
     m_gameScreen->setExitButtonVisible(true);
     
