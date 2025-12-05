@@ -9,7 +9,12 @@ qt_add_executable(SeaBattle WIN32
 	"Model.h"
 	"ModelAdapter.cpp"
 	"ModelAdapter.h"
+	"NetworkClient.cpp"
+	"NetworkClient.h"
+	"GameNetworkAdapter.cpp"
+	"GameNetworkAdapter.h"
 	"pch.h"
+	"Protocol.h"
 	"WelcomeScreen.cpp"
 	"WelcomeScreen.h"
 )
@@ -18,9 +23,12 @@ target_precompile_headers(SeaBattle PRIVATE
 	pch.h
 )
 
+find_package(Boost REQUIRED COMPONENTS system)
+
 target_link_libraries(SeaBattle PRIVATE
 	Qt::Core
 	Qt::Widgets
+	Boost::system
 )
 
 install(TARGETS SeaBattle
