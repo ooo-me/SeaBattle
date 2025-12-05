@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IGameModelSource.h"
-#include "model.h"
+#include "Model.h"
 #include <memory>
 
 namespace SeaBattle
