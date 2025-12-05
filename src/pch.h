@@ -3,6 +3,9 @@
 #include <random>
 #include <algorithm>
 #include <stdexcept>
+#include <memory>
+#include <functional>
+#include <string>
 
 #include <QApplication>
 #include <QMainWindow>
