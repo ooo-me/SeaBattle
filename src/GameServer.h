@@ -48,7 +48,7 @@ namespace SeaBattle
         void processQuit();
         
         tcp::socket socket_;
-        beast::flat_buffer buffer_;
+        asio::streambuf buffer_;
         std::unique_ptr<GameModel> gameModel_;
         SessionState state_;
         std::string playerName_;

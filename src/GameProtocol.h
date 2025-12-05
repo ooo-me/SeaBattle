@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <optional>
+#include <memory>
 
 namespace SeaBattle::Protocol
 {

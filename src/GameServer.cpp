@@ -1,5 +1,6 @@
 #include "GameServer.h"
 #include <iostream>
+#include <istream>
 
 namespace SeaBattle
 {
@@ -41,14 +42,13 @@ namespace SeaBattle
             {
                 if (!ec)
                 {
-                    std::string message{
-                        static_cast<const char*>(buffer_.data().data()),
-                        bytes_transferred
-                    };
-                    buffer_.consume(bytes_transferred);
+                    // Extract message from buffer using istream
+                    std::istream is(&buffer_);
+                    std::string message;
+                    std::getline(is, message);
                     
-                    std::cout << "[Server] Received: " << message;
-                    handleMessage(message);
+                    std::cout << "[Server] Received: " << message << std::endl;
+                    handleMessage(message + "\n");
                     
                     if (state_ != SessionState::Closed && state_ != SessionState::GameOver)
                     {

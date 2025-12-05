@@ -9,8 +9,14 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Qt6 COMPONENTS Widgets Core REQUIRED)
-qt_standard_project_setup()
+# Try to find Qt6, but make it optional for server-only builds
+find_package(Qt6 COMPONENTS Widgets Core)
+if(Qt6_FOUND)
+    qt_standard_project_setup()
+    message(STATUS "Qt6 found - building GUI application")
+else()
+    message(STATUS "Qt6 not found - building server-only")
+endif()
 
 add_subdirectory("src")
 
@@ -22,7 +28,7 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SeaBattle Game")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "SeaBattle")
 
 # WiX specific settings - only set when using WiX generator or when no generator is explicitly set
-if(NOT CPACK_GENERATOR OR CPACK_GENERATOR MATCHES "(?i)wix")
+if(NOT CPACK_GENERATOR OR CPACK_GENERATOR MATCHES "[Ww][Ii][Xx]")
     set(CPACK_WIX_UPGRADE_GUID "12345678-1234-1234-1234-123456789ABC")
     set(CPACK_WIX_PROGRAM_MENU_FOLDER "SeaBattle")
 
