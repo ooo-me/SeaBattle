@@ -174,6 +174,20 @@ client.connect("localhost", 12345);
 // Automated game flow testing
 ```
 
+## Security Considerations
+
+### Implemented Protections
+- **Message Size Limiting**: Maximum message size of 64KB to prevent DoS attacks
+- **Input Validation**: All coordinates and game states validated before processing
+- **Clean Disconnection**: Proper cleanup of resources on disconnect
+- **State Validation**: Enemy field state tracked to prevent invalid shots
+
+### Recommendations
+- Deploy behind firewall for local network play only
+- Consider adding authentication for production use
+- Monitor connection timeouts and implement rate limiting
+- Add integrity checks for game state synchronization
+
 ## Known Limitations
 
 ### Current Implementation
@@ -182,11 +196,12 @@ client.connect("localhost", 12345);
 - No spectator mode
 - No game state persistence
 - No chat functionality (architecture prepared)
+- No ship destruction synchronization (simplified to hit/miss)
 
 ### Platform Notes
 - Windows-focused build system (CMakePresets.json)
 - Should work on Linux/macOS with Qt6 and boost
-- Tested architecture but not full build
+- Architecture validated, building requires Qt6 + Conan setup
 
 ## Future Enhancements
 
