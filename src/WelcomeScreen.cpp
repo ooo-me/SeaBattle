@@ -1,5 +1,4 @@
 #include "WelcomeScreen.h"
-#include <QInputDialog>
 
 WelcomeScreen::WelcomeScreen(QWidget* parent)
     : QWidget(parent)

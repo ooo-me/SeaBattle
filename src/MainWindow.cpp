@@ -352,18 +352,17 @@ void MainWindow::showConnectionWaitingDialog(bool isHost, const QString& info)
         m_connectionDialog->setWindowModality(Qt::WindowModal);
         m_connectionDialog->setMinimumDuration(0);
         m_connectionDialog->setRange(0, 0); // Indeterminate progress
+        
+        // Подключаем обработчик отмены один раз при создании
+        connect(m_connectionDialog, &QProgressDialog::canceled, this, [this]() {
+            hideConnectionWaitingDialog();
+            m_isNetworkGame = false;
+            // TODO: Отменить сетевое подключение
+        });
     }
     
     m_connectionDialog->setLabelText(info);
-    
-    // Настраиваем кнопку отмены
     m_connectionDialog->setCancelButtonText("Отмена");
-    connect(m_connectionDialog, &QProgressDialog::canceled, this, [this]() {
-        hideConnectionWaitingDialog();
-        m_isNetworkGame = false;
-        // TODO: Отменить сетевое подключение
-    });
-    
     m_connectionDialog->show();
 }
 
@@ -372,6 +371,5 @@ void MainWindow::hideConnectionWaitingDialog()
     if (m_connectionDialog)
     {
         m_connectionDialog->hide();
-        m_connectionDialog->disconnect();
     }
 }
