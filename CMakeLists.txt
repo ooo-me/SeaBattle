@@ -9,13 +9,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Try to find Qt6, but make it optional for server-only builds
-find_package(Qt6 COMPONENTS Widgets Core)
-if(Qt6_FOUND)
+# Option to build without Qt (server-only mode)
+option(BUILD_SERVER_ONLY "Build only the server without GUI" OFF)
+
+if(NOT BUILD_SERVER_ONLY)
+    find_package(Qt6 COMPONENTS Widgets Core REQUIRED)
     qt_standard_project_setup()
-    message(STATUS "Qt6 found - building GUI application")
+    message(STATUS "Building GUI application with Qt6")
 else()
-    message(STATUS "Qt6 not found - building server-only")
+    message(STATUS "Building server-only (no Qt)")
 endif()
 
 add_subdirectory("src")

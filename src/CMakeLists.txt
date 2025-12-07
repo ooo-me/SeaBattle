@@ -1,5 +1,5 @@
-# GUI application (only if Qt6 is found)
-if(Qt6_FOUND)
+# GUI application (only if not building server-only)
+if(NOT BUILD_SERVER_ONLY)
     qt_add_executable(SeaBattle WIN32
         "BattleField.cpp"
         "BattleField.h"
@@ -52,7 +52,7 @@ install(TARGETS SeaBattleServer
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-if(Qt6_FOUND)
+if(NOT BUILD_SERVER_ONLY)
     set(deploy_tool_options_arg
         --no-system-d3d-compiler
         --no-system-dxc-compiler

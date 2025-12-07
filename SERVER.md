@@ -10,13 +10,27 @@ The SeaBattle server is implemented using Boost.Asio/Beast and provides a game s
 
 ## Building
 
-The server is built automatically when you build the project:
+### Building with Qt GUI (default)
+
+By default, the project builds both the GUI application and the server:
 
 ```bash
+cmake -B build
 cmake --build build
 ```
 
-This creates the `SeaBattleServer` executable in the `build/src` directory.
+This requires Qt6 to be installed.
+
+### Building Server Only (without Qt)
+
+To build only the server without Qt dependencies:
+
+```bash
+cmake -B build -DBUILD_SERVER_ONLY=ON
+cmake --build build
+```
+
+This creates the `SeaBattleServer` executable in the `build/src` directory and does not require Qt6.
 
 ## Running the Server
 
