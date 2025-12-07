@@ -1,7 +1,6 @@
 #include "GameServer.h"
 #include <iostream>
 #include <istream>
-#include <random>
 
 namespace SeaBattle
 {
@@ -313,18 +312,10 @@ namespace SeaBattle
     
     GameServer::GameServer(asio::io_context& ioc, unsigned short port)
         : ioc_(ioc)
-        , acceptor_(ioc, tcp::endpoint(tcp::v6(), port))
+        , acceptor_(ioc, tcp::endpoint(tcp::v4(), port))
         , running_(false)
     {
-        // Allow both IPv4 and IPv6 connections (dual-stack)
-        boost::system::error_code ec;
-        acceptor_.set_option(asio::ip::v6_only(false), ec);
-        if (ec)
-        {
-            std::cerr << "[Server] Warning: Failed to enable dual-stack (IPv4/IPv6): " << ec.message() << std::endl;
-            std::cerr << "[Server] Falling back to IPv6-only mode" << std::endl;
-        }
-        std::cout << "[Server] Server created on port " << port << std::endl;
+        std::cout << "[Server] Server created on port " << port << " (IPv4)" << std::endl;
     }
 
     void GameServer::start()

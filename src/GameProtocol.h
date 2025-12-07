@@ -8,6 +8,9 @@
 
 namespace SeaBattle::Protocol
 {
+    // Maximum coordinate value for validation (allows some margin beyond game field)
+    inline constexpr int MAX_COORDINATE = 10000;
+    
     // Message types for client-server communication
     enum class MessageType
     {
@@ -303,8 +306,8 @@ namespace SeaBattle::Protocol
                     int row, col;
                     if (iss >> row >> col)
                     {
-                        // Validate coordinate ranges (reasonable limits)
-                        if (row < 0 || row > 10000 || col < 0 || col > 10000)
+                        // Validate coordinate ranges (reasonable limits to prevent abuse)
+                        if (row < 0 || row > MAX_COORDINATE || col < 0 || col > MAX_COORDINATE)
                             return nullptr;
                         
                         return std::make_unique<ShootMessage>(row, col);

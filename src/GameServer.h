@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <functional>
+#include <random>
 
 namespace SeaBattle
 {
