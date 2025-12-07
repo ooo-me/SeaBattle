@@ -286,12 +286,16 @@ namespace SeaBattle::Protocol
                     std::getline(iss >> std::ws, name);
                     
                     // Validate player name (max 50 characters, no control characters)
-                    if (name.empty() || name.length() > 50)
+                    constexpr int MAX_PLAYER_NAME_LENGTH = 50;
+                    constexpr char MIN_PRINTABLE_CHAR = 32; // Space
+                    constexpr char DEL_CHAR = 127;
+                    
+                    if (name.empty() || name.length() > MAX_PLAYER_NAME_LENGTH)
                         return nullptr;
                     
                     for (char c : name)
                     {
-                        if (c < 32 || c == 127) // Control characters
+                        if (c < MIN_PRINTABLE_CHAR || c == DEL_CHAR)
                             return nullptr;
                     }
                     

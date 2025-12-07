@@ -315,7 +315,7 @@ namespace SeaBattle
         , acceptor_(ioc, tcp::endpoint(tcp::v4(), port))
         , running_(false)
     {
-        std::cout << "[Server] Server created on port " << port << " (IPv4)" << std::endl;
+        std::cout << "[Server] Server created on port " << port << std::endl;
     }
 
     void GameServer::start()
@@ -361,8 +361,9 @@ namespace SeaBattle
                 try {
                     const std::string msg = "ERROR Server busy - another session in progress\n";
                     asio::write(socket, asio::buffer(msg));
-                } catch (const std::exception&) {
-                    // Ignore errors when sending rejection message
+                } catch (const std::exception& e) {
+                    // Ignore errors when sending rejection message (client may have disconnected)
+                    std::cout << "[Server] Failed to send rejection message: " << e.what() << std::endl;
                 }
                 socket.close();
             }
