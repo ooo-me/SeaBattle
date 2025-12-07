@@ -20,6 +20,7 @@ namespace SeaBattle
     {
         WaitingForClient,
         ClientConnected,
+        WaitingForReady,
         GameInProgress,
         GameOver,
         Closed
@@ -47,12 +48,16 @@ namespace SeaBattle
         void processShoot(int row, int col);
         void processQuit();
         
+        Protocol::ShotResult mapCellStateToShotResult(CellState cellState) const;
+        
         tcp::socket socket_;
         asio::streambuf buffer_;
         std::unique_ptr<GameModel> gameModel_;
         SessionState state_;
         std::string playerName_;
         bool clientReady_;
+        std::random_device rd_;
+        std::mt19937 gen_;
     };
 
     // Game server using boost::asio

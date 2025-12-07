@@ -281,6 +281,17 @@ namespace SeaBattle::Protocol
                 {
                     std::string name;
                     std::getline(iss >> std::ws, name);
+                    
+                    // Validate player name (max 50 characters, no control characters)
+                    if (name.empty() || name.length() > 50)
+                        return nullptr;
+                    
+                    for (char c : name)
+                    {
+                        if (c < 32 || c == 127) // Control characters
+                            return nullptr;
+                    }
+                    
                     return std::make_unique<JoinGameMessage>(name);
                 }
                 
@@ -292,6 +303,10 @@ namespace SeaBattle::Protocol
                     int row, col;
                     if (iss >> row >> col)
                     {
+                        // Validate coordinate ranges (reasonable limits)
+                        if (row < 0 || row > 10000 || col < 0 || col > 10000)
+                            return nullptr;
+                        
                         return std::make_unique<ShootMessage>(row, col);
                     }
                     return nullptr;

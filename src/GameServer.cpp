@@ -11,6 +11,7 @@ namespace SeaBattle
         : socket_(std::move(socket))
         , state_(SessionState::WaitingForClient)
         , clientReady_(false)
+        , gen_(rd_())
     {
         gameModel_ = std::make_unique<GameModel>();
     }
@@ -51,7 +52,8 @@ namespace SeaBattle
                     std::cout << "[Server] Received: " << message << std::endl;
                     handleMessage(message);
                     
-                    if (state_ != SessionState::Closed && state_ != SessionState::GameOver)
+                    // Continue reading messages unless session is closed
+                    if (state_ != SessionState::Closed)
                     {
                         readMessage();
                     }
@@ -134,7 +136,19 @@ namespace SeaBattle
     {
         if (state_ != SessionState::ClientConnected)
         {
-            Protocol::ErrorMessage error("Cannot join at this state");
+            std::string errorMsg;
+            switch (state_) {
+                case SessionState::WaitingForReady:
+                    errorMsg = "Already joined. Send READY to start the game.";
+                    break;
+                case SessionState::GameInProgress:
+                    errorMsg = "Cannot join - game is already in progress";
+                    break;
+                default:
+                    errorMsg = "Cannot join at this state";
+                    break;
+            }
+            Protocol::ErrorMessage error(errorMsg);
             sendMessage(error);
             return;
         }
@@ -145,13 +159,28 @@ namespace SeaBattle
         // Assign player as player 0
         Protocol::GameStartedMessage gameStarted(0);
         sendMessage(gameStarted);
+        
+        // Transition to waiting for ready state
+        state_ = SessionState::WaitingForReady;
     }
 
     void GameSession::processReady()
     {
-        if (state_ != SessionState::ClientConnected)
+        if (state_ != SessionState::WaitingForReady)
         {
-            Protocol::ErrorMessage error("Cannot ready at this state");
+            std::string errorMsg;
+            switch (state_) {
+                case SessionState::ClientConnected:
+                    errorMsg = "Must join game before sending READY";
+                    break;
+                case SessionState::GameInProgress:
+                    errorMsg = "Game already in progress";
+                    break;
+                default:
+                    errorMsg = "Cannot ready at this state";
+                    break;
+            }
+            Protocol::ErrorMessage error(errorMsg);
             sendMessage(error);
             return;
         }
@@ -191,28 +220,11 @@ namespace SeaBattle
             return;
         }
         
-        bool hit = gameModel_->shoot(row, col);
+        gameModel_->shoot(row, col);
         
         // Determine result
-        Protocol::ShotResult result;
         CellState cellState = gameModel_->getEnemyCellState(0, row, col);
-        
-        if (cellState == CellState::Destroyed)
-        {
-            result = Protocol::ShotResult::DESTROYED;
-        }
-        else if (cellState == CellState::Hit)
-        {
-            result = Protocol::ShotResult::HIT;
-        }
-        else if (cellState == CellState::Miss)
-        {
-            result = Protocol::ShotResult::MISS;
-        }
-        else
-        {
-            result = Protocol::ShotResult::INVALID;
-        }
+        Protocol::ShotResult result = mapCellStateToShotResult(cellState);
         
         Protocol::ShootResultMessage shootResult(row, col, result);
         sendMessage(shootResult);
@@ -237,35 +249,20 @@ namespace SeaBattle
             std::cout << "[Server] AI opponent's turn" << std::endl;
             
             // Simple AI: random shots
-            static std::random_device rd;
-            static std::mt19937 gen(rd());
             std::uniform_int_distribution<> dis(0, GameField::SIZE - 1);
             
             bool aiContinues = true;
             while (aiContinues && gameModel_->getGameState() == GameState::Playing)
             {
-                int aiRow = dis(gen);
-                int aiCol = dis(gen);
+                int aiRow = dis(gen_);
+                int aiCol = dis(gen_);
                 
                 if (gameModel_->isValidShot(aiRow, aiCol))
                 {
                     bool aiHit = gameModel_->shoot(aiRow, aiCol);
                     
                     CellState aiCellState = gameModel_->getEnemyCellState(1, aiRow, aiCol);
-                    Protocol::ShotResult aiResult;
-                    
-                    if (aiCellState == CellState::Destroyed)
-                    {
-                        aiResult = Protocol::ShotResult::DESTROYED;
-                    }
-                    else if (aiCellState == CellState::Hit)
-                    {
-                        aiResult = Protocol::ShotResult::HIT;
-                    }
-                    else
-                    {
-                        aiResult = Protocol::ShotResult::MISS;
-                    }
+                    Protocol::ShotResult aiResult = mapCellStateToShotResult(aiCellState);
                     
                     Protocol::OpponentShotMessage opponentShot(aiRow, aiCol, aiResult);
                     sendMessage(opponentShot);
@@ -296,14 +293,37 @@ namespace SeaBattle
         std::cout << "[Server] Client quit" << std::endl;
         close();
     }
+    
+    Protocol::ShotResult GameSession::mapCellStateToShotResult(CellState cellState) const
+    {
+        switch (cellState)
+        {
+            case CellState::Destroyed:
+                return Protocol::ShotResult::DESTROYED;
+            case CellState::Hit:
+                return Protocol::ShotResult::HIT;
+            case CellState::Miss:
+                return Protocol::ShotResult::MISS;
+            default:
+                return Protocol::ShotResult::INVALID;
+        }
+    }
 
     // GameServer implementation
     
     GameServer::GameServer(asio::io_context& ioc, unsigned short port)
         : ioc_(ioc)
-        , acceptor_(ioc, tcp::endpoint(tcp::v4(), port))
+        , acceptor_(ioc, tcp::endpoint(tcp::v6(), port))
         , running_(false)
     {
+        // Allow both IPv4 and IPv6 connections (dual-stack)
+        boost::system::error_code ec;
+        acceptor_.set_option(asio::ip::v6_only(false), ec);
+        if (ec)
+        {
+            std::cerr << "[Server] Warning: Failed to enable dual-stack (IPv4/IPv6): " << ec.message() << std::endl;
+            std::cerr << "[Server] Falling back to IPv6-only mode" << std::endl;
+        }
         std::cout << "[Server] Server created on port " << port << std::endl;
     }
 
@@ -347,6 +367,12 @@ namespace SeaBattle
                 currentSession_->getState() != SessionState::GameOver)
             {
                 std::cout << "[Server] Rejecting connection - session in progress" << std::endl;
+                try {
+                    const std::string msg = "ERROR Server busy - another session in progress\n";
+                    asio::write(socket, asio::buffer(msg));
+                } catch (const std::exception&) {
+                    // Ignore errors when sending rejection message
+                }
                 socket.close();
             }
             else

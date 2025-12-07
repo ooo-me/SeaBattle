@@ -1,28 +1,6 @@
 #include "GameServer.h"
 #include <iostream>
-#include <csignal>
 #include <memory>
-
-namespace
-{
-    std::unique_ptr<SeaBattle::GameServer> g_server;
-    boost::asio::io_context* g_ioc = nullptr;
-}
-
-void signalHandler(int signal)
-{
-    std::cout << "\n[Server] Shutting down gracefully..." << std::endl;
-    
-    if (g_server)
-    {
-        g_server->stop();
-    }
-    
-    if (g_ioc)
-    {
-        g_ioc->stop();
-    }
-}
 
 int main(int argc, char* argv[])
 {
@@ -52,15 +30,20 @@ int main(int argc, char* argv[])
         
         std::cout << "[Server] SeaBattle Server starting on port " << port << std::endl;
         
-        // Set up signal handling
-        std::signal(SIGINT, signalHandler);
-        std::signal(SIGTERM, signalHandler);
-        
         boost::asio::io_context ioc;
-        g_ioc = &ioc;
         
-        g_server = std::make_unique<SeaBattle::GameServer>(ioc, port);
-        g_server->start();
+        // Set up signal handling using boost::asio::signal_set (signal-safe)
+        boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
+        
+        auto server = std::make_shared<SeaBattle::GameServer>(ioc, port);
+        server->start();
+        
+        // Handle signals asynchronously
+        signals.async_wait([&server, &ioc](boost::system::error_code /*ec*/, int /*signo*/) {
+            std::cout << "\n[Server] Shutting down gracefully..." << std::endl;
+            server->stop();
+            ioc.stop();
+        });
         
         // Run the io_context
         ioc.run();
