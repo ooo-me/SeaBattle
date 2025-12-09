@@ -22,7 +22,7 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SeaBattle Game")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "SeaBattle")
 
 # WiX specific settings - only set when using WiX generator or when no generator is explicitly set
-if(NOT CPACK_GENERATOR OR CPACK_GENERATOR MATCHES "(?i)wix")
+if(NOT DEFINED CPACK_GENERATOR OR CPACK_GENERATOR MATCHES "[Ww][Ii][Xx]")
     set(CPACK_WIX_UPGRADE_GUID "12345678-1234-1234-1234-123456789ABC")
     set(CPACK_WIX_PROGRAM_MENU_FOLDER "SeaBattle")
 
