@@ -1,57 +1,52 @@
 #include "ModelAdapter.h"
 
 
-GameModelAdapter::GameModelAdapter()
-    : model(std::make_unique<SeaBattle::GameModel>())
+GameModelAdapter::GameModelAdapter(SeaBattle::GameModel& sharedModel)
+    : m_model(sharedModel)
 {
 }
 
-void GameModelAdapter::startGame()
+void GameModelAdapter::StartGame()
 {
-    // Всегда начинаем с чистой модели и новой расстановкой кораблей
-    model = std::make_unique<SeaBattle::GameModel>();
-    model->startGame();
-    if (gameStateCallback)
+    // Используем переданную модель
+    m_model.StartGame();
+    if (m_gameStateCallback)
     {
-        gameStateCallback(SeaBattle::GameState::Playing);
-    }
-    if (playerSwitchCallback)
-    {
-        playerSwitchCallback(model->getCurrentPlayer());
+        m_gameStateCallback(SeaBattle::GameState::Playing);
     }
 }
 
-bool GameModelAdapter::processShot(int row, int col)
+bool GameModelAdapter::ProcessShot(int row, int col)
 {
-    if (!model->isValidShot(row, col))
+    if (!m_model.isValidShot(row, col))
     {
         return false;
     }
 
-    int currentPlayer = model->getCurrentPlayer();
-    bool hit = model->shoot(row, col);
+    int currentPlayer = m_model.GetCurrentPlayer();
+    bool hit = m_model.ProcessShot(row, col);
 
     // Уведомляем об изменении клетки
-    if (cellUpdateCallback)
+    if (m_cellUpdateCallback)
     {
-        SeaBattle::CellState newState = model->getEnemyViewCellState(currentPlayer, row, col);
-        cellUpdateCallback(currentPlayer, row, col, newState);
+        SeaBattle::CellState newState = m_model.getEnemyViewCellState(currentPlayer, row, col);
+        m_cellUpdateCallback(currentPlayer, row, col, newState);
     }
 
     // Проверяем состояние игры
-    if (model->getGameState() == SeaBattle::GameState::GameOver)
+    if (m_model.GetGameState() == SeaBattle::GameState::GameOver)
     {
-        if (gameOverCallback)
+        if (m_gameOverCallback)
         {
-            gameOverCallback(model->getWinner());
+            m_gameOverCallback(m_model.getWinner());
         }
     }
     else if (!hit)
     {
         // Если промах - уведомляем о смене игрока
-        if (playerSwitchCallback)
+        if (m_playerSwitchCallback)
         {
-            playerSwitchCallback(model->getCurrentPlayer());
+            m_playerSwitchCallback(m_model.GetCurrentPlayer());
         }
     }
 
@@ -59,17 +54,17 @@ bool GameModelAdapter::processShot(int row, int col)
 }
 
 // Методы для получения состояния для GUI
+const std::vector<SeaBattle::Ship>& GameModelAdapter::GetPlayerShips(int player) const
+{
+    return m_model.GetPlayerShips(player);
+}
+
 SeaBattle::CellState GameModelAdapter::getPlayerCellState(int player, int row, int col) const
 {
-    return model->getPlayerCellState(player, row, col);
+    return m_model.getPlayerCellState(player, row, col);
 }
 
 SeaBattle::CellState GameModelAdapter::getEnemyCellState(int player, int row, int col) const
 {
-    return model->getEnemyViewCellState(player, row, col);
-}
-
-const std::vector<SeaBattle::Ship>& GameModelAdapter::getPlayerShips(int player) const
-{
-    return model->getPlayerShips(player);
+    return m_model.getEnemyViewCellState(player, row, col);
 }

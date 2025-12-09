@@ -2,13 +2,13 @@
 
 #include "BattleField.h"
 #include "GameScreen.h"
-#include "ModelAdapter.h"
 #include "WelcomeScreen.h"
 
 #include <QStackedWidget>
 
-MainWindow::MainWindow(QWidget* parent)
+MainWindow::MainWindow(SeaBattle::IModel& model, QWidget* parent)
     : QMainWindow(parent)
+    , m_gameModel(model)
 {
     setWindowTitle("Морской Бой");
     setMinimumSize(1280, 720);
@@ -22,8 +22,6 @@ MainWindow::MainWindow(QWidget* parent)
 
     m_stackedWidget->addWidget(m_welcomeScreen);
     m_stackedWidget->addWidget(m_gameScreen);
-
-    initializeGameModel();
 
     // Подключаем сигналы
     connect(m_welcomeScreen, &WelcomeScreen::startGameRequested, this, &MainWindow::showGameScreen);
@@ -42,10 +40,10 @@ void MainWindow::showGameScreen()
     m_gameScreen->getPlayer1Field()->clearAll();
     m_gameScreen->getPlayer2Field()->clearAll();
 
-    m_gameModel->startGame();
+    m_gameModel.StartGame();
     updateBattleFields();
-    showTurnMessage(m_gameModel->getCurrentPlayer());
-    
+    showTurnMessage(m_gameModel.GetCurrentPlayer());
+
     // Показываем кнопку выхода, так как игра началась (состояние Playing)
     m_gameScreen->setExitButtonVisible(true);
 }
@@ -53,7 +51,7 @@ void MainWindow::showGameScreen()
 void MainWindow::showWelcomeScreen()
 {
     m_stackedWidget->setCurrentWidget(m_welcomeScreen);
-    
+
     // Скрываем кнопку выхода на экране приветствия
     m_gameScreen->setExitButtonVisible(false);
 }
@@ -61,16 +59,16 @@ void MainWindow::showWelcomeScreen()
 void MainWindow::onCellClicked(int player, int row, int col)
 {
     // Текущий игрок до выстрела
-    int before = m_gameModel->getCurrentPlayer();
+    int before = m_gameModel.GetCurrentPlayer();
     if (player != before)
     {
         return;
     }
 
-    bool hit = m_gameModel->processShot(row, col);
+    bool hit = m_gameModel.ProcessShot(row, col);
 
     // Если попадание и игра не окончена — разрешаем ОСТАВШИЕСЯ незастреленные клетки на поле противника
-    if (hit && m_gameModel->getGameState() == SeaBattle::GameState::Playing)
+    if (hit && m_gameModel.GetGameState() == SeaBattle::GameState::Playing)
     {
         if (player == 0)
         {
@@ -85,8 +83,8 @@ void MainWindow::onCellClicked(int player, int row, int col)
 
     // Если промах — игрок сменится через колбэк, и нужное поле активируется в GameScreen
     // Если выстрел недопустим (клик по уже обстрелянной клетке), модель вернет false и игрок НЕ сменится
-    int after = m_gameModel->getCurrentPlayer();
-    if (after == before && m_gameModel->getGameState() == SeaBattle::GameState::Playing)
+    int after = m_gameModel.GetCurrentPlayer();
+    if (after == before && m_gameModel.GetGameState() == SeaBattle::GameState::Playing)
     {
         // Недопустимый выстрел: возвращаем доступ к незастреленным клеткам поля противника
         if (before == 0)
@@ -100,128 +98,31 @@ void MainWindow::onCellClicked(int player, int row, int col)
     }
 }
 
-void MainWindow::onEnemyCellClicked(int row, int col)
-{
-    if (m_gameModel->getGameState() != SeaBattle::GameState::Playing)
-    {
-        return;
-    }
-
-    // Этот слот не используется напрямую в текущей схеме, логика в onCellClicked
-}
-
 void MainWindow::onCellUpdated(int player, int row, int col, SeaBattle::CellState state)
 {
-    BattleField* targetField = nullptr;
-
-    if (player == 0)
-    {
-        // Обновление на поле игрока 2 (противника для игрока 1)
-        targetField = m_gameScreen->getPlayer2Field();
-    }
-    else
-    {
-        // Обновление на поле игрока 1 (противника для игрока 2)
-        targetField = m_gameScreen->getPlayer1Field();
-    }
-
-    if (targetField)
-    {
-        switch (state)
-        {
-        case SeaBattle::CellState::Miss:
-            targetField->markMiss(row, col);
-            break;
-        case SeaBattle::CellState::Hit:
-        case SeaBattle::CellState::Destroyed:
-            targetField->markHit(row, col);
-            break;
-        default:
-            break;
-        }
-    }
+    m_gameScreen->onCellUpdated(player, row, col, state);
 }
 
 void MainWindow::onPlayerSwitched(int newPlayer)
 {
+    m_gameScreen->onPlayerSwitched(newPlayer);
     showTurnMessage(newPlayer);
-
     refreshShipOverlaysForCurrentPlayer();
 }
 
 void MainWindow::onGameOver(int winner)
 {
-    m_gameScreen->getPlayer2Field()->disableAllCells();
-    
-    // Скрываем кнопку выхода, так как игра окончена
-    m_gameScreen->setExitButtonVisible(false);
-
-    QMessageBox msgBox;
-    msgBox.setWindowTitle("Игра окончена");
-    msgBox.setText(QString("Победил игрок %1!").arg(winner + 1));
-    QPushButton* newGameButton = msgBox.addButton("Новая игра", QMessageBox::AcceptRole);
-    QPushButton* exitButton = msgBox.addButton("Выход", QMessageBox::RejectRole);
-
-    msgBox.exec();
-
-    if (msgBox.clickedButton() == newGameButton)
-    {
-        // Перезапускаем игру
-        m_gameModel = std::make_unique<GameModelAdapter>();
-        initializeGameModel();
-        // Очищаем поля сразу, чтобы на экране приветствия не оставались старые попадания
-        m_gameScreen->getPlayer1Field()->clearAll();
-        m_gameScreen->getPlayer2Field()->clearAll();
-        showWelcomeScreen();
-    }
-    else if (msgBox.clickedButton() == exitButton)
-    {
-        qApp->quit();
-    }
-}
-
-void MainWindow::onGameStateChanged(SeaBattle::GameState state)
-{
+    m_gameScreen->onGameOver(winner);
 }
 
 void MainWindow::onExitGameRequested()
 {
-    // Завершаем текущую игру и возвращаемся на экран приветствия
-    // Инициализируем новую модель для следующей игры
-    initializeGameModel();
-    
     // Очищаем игровые поля
     m_gameScreen->getPlayer1Field()->clearAll();
     m_gameScreen->getPlayer2Field()->clearAll();
-    
+
     // Переходим на экран приветствия
     showWelcomeScreen();
-}
-
-void MainWindow::initializeGameModel()
-{
-    m_gameModel = std::make_unique<GameModelAdapter>();
-
-    // Подключаем callback'и к GameScreen
-    m_gameModel->setCellUpdateCallback([this](int player, int row, int col, SeaBattle::CellState state) {
-        QMetaObject::invokeMethod(this, [this, player, row, col, state]() {
-            m_gameScreen->onCellUpdated(player, row, col, state);
-            });
-        });
-
-    m_gameModel->setPlayerSwitchCallback([this](int newPlayer) {
-        QMetaObject::invokeMethod(this, [this, newPlayer]() {
-            m_gameScreen->onPlayerSwitched(newPlayer);
-            showTurnMessage(newPlayer);
-            refreshShipOverlaysForCurrentPlayer();
-            });
-        });
-
-    m_gameModel->setGameOverCallback([this](int winner) {
-        QMetaObject::invokeMethod(this, [this, winner]() {
-            m_gameScreen->onGameOver(winner);
-            });
-        });
 }
 
 void MainWindow::updateBattleFields()
@@ -235,10 +136,10 @@ void MainWindow::refreshShipOverlaysForCurrentPlayer()
     m_gameScreen->getPlayer1Field()->resetUnfiredCellsStyle();
     m_gameScreen->getPlayer2Field()->resetUnfiredCellsStyle();
 
-    int current = m_gameModel->getCurrentPlayer();
+    int current = m_gameModel.GetCurrentPlayer();
 
-    const auto& player1Ships = m_gameModel->getPlayerShips(0);
-    const auto& player2Ships = m_gameModel->getPlayerShips(1);
+    const auto& player1Ships = m_gameModel.GetPlayerShips(0);
+    const auto& player2Ships = m_gameModel.GetPlayerShips(1);
 
     BattleField* ownField = nullptr;
     BattleField* enemyField = nullptr;

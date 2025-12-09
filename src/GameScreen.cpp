@@ -38,7 +38,7 @@ GameScreen::GameScreen(QWidget* parent)
     m_buttonsLayout = new QHBoxLayout();
     m_buttonsLayout->addStretch(); // Растягивающий элемент слева для выравнивания кнопки вправо
     m_buttonsLayout->addWidget(m_exitButton);
-    
+
     // Создаём контейнер для layout кнопок
     m_buttonsWidget = new QWidget(this); // Родитель this для автоматического управления памятью
     m_buttonsWidget->setLayout(m_buttonsLayout);
@@ -187,9 +187,9 @@ void GameScreen::onExitButtonClicked()
     msgBox.setText("Вы уверены, что хотите выйти из игры? Текущий прогресс будет потерян.");
     msgBox.addButton("Вернуться к игре", QMessageBox::RejectRole);
     QPushButton* exitButton = msgBox.addButton("Выйти", QMessageBox::AcceptRole);
-    
+
     msgBox.exec();
-    
+
     // Если пользователь подтвердил выход, завершаем текущую игру и возвращаемся на экран приветствия
     if (msgBox.clickedButton() == exitButton)
     {
