@@ -1,36 +1,31 @@
 #pragma once
 
+#include "Model.h"
 #include <QMainWindow>
+#include <QStackedWidget>
+#include <memory>
 
-class GameModelAdapter;
 class WelcomeScreen;
 class GameScreen;
-namespace SeaBattle
-{
-    enum class CellState;
-    enum class GameState;
-}
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    MainWindow(QWidget* parent = nullptr);
+    MainWindow(SeaBattle::IModel& model, QWidget* parent = nullptr);
     ~MainWindow() override;
+
+public slots:
+    void onCellUpdated(int player, int row, int col, SeaBattle::CellState state);
+    void onPlayerSwitched(int newPlayer);
+    void onGameOver(int winner);
 
 private slots:
     void showGameScreen();
     void showWelcomeScreen();
     void onCellClicked(int player, int row, int col);
-    void onEnemyCellClicked(int row, int col);
-    void onCellUpdated(int player, int row, int col, SeaBattle::CellState state);
-    void onPlayerSwitched(int newPlayer);
-    void onGameOver(int winner);
-    void onGameStateChanged(SeaBattle::GameState state);
     void onExitGameRequested(); // Обработчик запроса на выход из игры
 
 private:
-    void initializeGameModel();
     void updateBattleFields();
     void showTurnMessage(int player);
     void refreshShipOverlaysForCurrentPlayer();
@@ -39,5 +34,5 @@ private:
     QStackedWidget* m_stackedWidget;
     WelcomeScreen* m_welcomeScreen;
     GameScreen* m_gameScreen;
-    std::unique_ptr<GameModelAdapter> m_gameModel;
+    SeaBattle::IModel& m_gameModel;
 };

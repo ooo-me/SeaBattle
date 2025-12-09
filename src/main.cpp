@@ -1,3 +1,5 @@
+#include "Model.h"
+#include "ModelAdapter.h"
 #include "MainWindow.h"
 
 int main(int argc, char* argv[])
@@ -11,7 +13,22 @@ int main(int argc, char* argv[])
         "                               stop:0 #1E3C72, stop:1 #2A5298);"
         "}");
 
-    MainWindow window;
+    SeaBattle::GameModel model;
+    auto gameModel = GameModelAdapter(model);
+
+    MainWindow window(gameModel);
+    // Подключаем callback'и к GameScreen
+    gameModel.setCellUpdateCallback([&window](int player, int row, int col, SeaBattle::CellState state) {
+        QMetaObject::invokeMethod(&window, &MainWindow::onCellUpdated, player, row, col, state);
+        });
+
+    gameModel.setPlayerSwitchCallback([&window](int newPlayer) {
+        QMetaObject::invokeMethod(&window, &MainWindow::onPlayerSwitched, newPlayer);
+        });
+
+    gameModel.setGameOverCallback([&window](int winner) {
+        QMetaObject::invokeMethod(&window, &MainWindow::onGameOver, winner);
+        });
     window.show();
 
     return app.exec();

@@ -16,7 +16,7 @@ public:
 
     BattleField* getPlayer1Field() const { return m_player1Field; }
     BattleField* getPlayer2Field() const { return m_player2Field; }
-    
+
     // Показать/скрыть кнопку выхода в зависимости от состояния игры
     void setExitButtonVisible(bool visible);
 

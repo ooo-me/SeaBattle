@@ -27,7 +27,9 @@ namespace SeaBattle
         bool isVertical;
 
         Ship(ShipType t, int startRow, int startCol, bool vertical)
-            : type(t), health(static_cast<int>(t)), isVertical(vertical)
+            : type(t)
+            , health(static_cast<int>(t))
+            , isVertical(vertical)
         {
             positions.reserve(health);
             for (int i = 0; i < health; ++i)
@@ -257,31 +259,47 @@ namespace SeaBattle
         GameOver
     };
 
-    class GameModel
+    struct IModel
+    {
+        virtual ~IModel() = default;
+
+        virtual void StartGame() = 0;
+        virtual bool ProcessShot(int row, int col) = 0;
+
+        virtual const std::vector<SeaBattle::Ship>& GetPlayerShips(int player) const = 0;
+        virtual int GetCurrentPlayer() const = 0;
+        virtual GameState GetGameState() const = 0;
+    };
+
+    class GameModel : public IModel
     {
     public:
-        GameModel()
-            : currentPlayer(0), gameState(GameState::Welcome)
+        void StartGame() override
         {
             // Автоматически размещаем корабли для обоих игроков
-            if (!ShipPlacer::autoPlaceShips(player1Field))
+            m_player1Field = GameField();
+            m_player2Field = GameField();
+            if (!ShipPlacer::autoPlaceShips(m_player1Field))
             {
                 throw std::runtime_error("Failed to place ships for player 1");
             }
-            if (!ShipPlacer::autoPlaceShips(player2Field))
+            if (!ShipPlacer::autoPlaceShips(m_player2Field))
             {
                 throw std::runtime_error("Failed to place ships for player 2");
             }
+            m_gameState = GameState::Playing;
+            m_currentPlayer = 0; // Первый игрок начинает
+            m_winner = 0;
         }
 
-        bool shoot(int row, int col)
+        bool ProcessShot(int row, int col) override
         {
-            if (gameState != GameState::Playing)
+            if (m_gameState != GameState::Playing)
             {
                 return false;
             }
 
-            GameField& enemyField = (currentPlayer == 0) ? player2Field : player1Field;
+            GameField& enemyField = (m_currentPlayer == 0) ? m_player2Field : m_player1Field;
             bool hit = enemyField.shoot(row, col);
 
             if (hit)
@@ -292,8 +310,8 @@ namespace SeaBattle
                 // Проверяем конец игры
                 if (enemyField.allShipsDestroyed())
                 {
-                    gameState = GameState::GameOver;
-                    winner = currentPlayer;
+                    m_gameState = GameState::GameOver;
+                    m_winner = m_currentPlayer;
                 }
             }
             else
@@ -305,33 +323,27 @@ namespace SeaBattle
             return hit;
         }
 
-        void startGame()
-        {
-            gameState = GameState::Playing;
-            currentPlayer = 0; // Первый игрок начинает
-        }
-
         void switchPlayer()
         {
-            currentPlayer = (currentPlayer + 1) % 2;
+            m_currentPlayer = (m_currentPlayer + 1) % 2;
         }
 
         CellState getPlayerCellState(int player, int row, int col) const
         {
-            const GameField& field = (player == 0) ? player1Field : player2Field;
+            const GameField& field = (player == 0) ? m_player1Field : m_player2Field;
             return field.getCellState(row, col);
         }
 
         CellState getEnemyCellState(int player, int row, int col) const
         {
-            const GameField& field = (player == 0) ? player2Field : player1Field;
+            const GameField& field = (player == 0) ? m_player2Field : m_player1Field;
             return field.getCellState(row, col);
         }
 
         // Для отображения кораблей игрока
-        const std::vector<Ship>& getPlayerShips(int player) const
+        const std::vector<Ship>& GetPlayerShips(int player) const override
         {
-            const GameField& field = (player == 0) ? player1Field : player2Field;
+            const GameField& field = (player == 0) ? m_player1Field : m_player2Field;
             return field.getShips();
         }
 
@@ -349,9 +361,9 @@ namespace SeaBattle
             return state;
         }
 
-        int getCurrentPlayer() const { return currentPlayer; }
-        GameState getGameState() const { return gameState; }
-        int getWinner() const { return winner; }
+        int GetCurrentPlayer() const override { return m_currentPlayer; }
+        GameState GetGameState() const override { return m_gameState; }
+        int getWinner() const { return m_winner; }
 
         bool isValidShot(int row, int col) const
         {
@@ -360,7 +372,7 @@ namespace SeaBattle
                 return false;
             }
 
-            const GameField& enemyField = (currentPlayer == 0) ? player2Field : player1Field;
+            const GameField& enemyField = (m_currentPlayer == 0) ? m_player2Field : m_player1Field;
             CellState state = enemyField.getCellState(row, col);
 
             // Можно стрелять только в Empty или Ship клетки
@@ -368,11 +380,11 @@ namespace SeaBattle
         }
 
     private:
-        GameField player1Field;
-        GameField player2Field;
-        int currentPlayer;
-        GameState gameState;
-        int winner;
+        GameField m_player1Field;
+        GameField m_player2Field;
+        int m_currentPlayer = 0;;
+        GameState m_gameState = GameState::Welcome;
+        int m_winner = 0;
 
         void checkShipDestruction(int row, int col, GameField& field)
         {
