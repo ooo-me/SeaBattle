@@ -9,7 +9,7 @@ class RemoteModel : public SeaBattle::IModel
 public:
     using CellUpdateCallback = std::function<void(int player, int row, int col, SeaBattle::CellState state)>;
     using PlayerSwitchCallback = std::function<void(int newPlayer)>;
-    using GameOverCallback = std::function<void(int winner)>;
+    using GameOverCallback = std::function<void(bool)>;
 
     RemoteModel();
     ~RemoteModel() override;

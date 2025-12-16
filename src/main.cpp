@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
         QMetaObject::invokeMethod(&window, &MainWindow::onPlayerSwitched, newPlayer);
         });
 
-    gameModel.setGameOverCallback([&window](int winner) {
-        QMetaObject::invokeMethod(&window, &MainWindow::onGameOver, winner);
+    gameModel.setGameOverCallback([&window](bool win) {
+        QMetaObject::invokeMethod(&window, &MainWindow::onGameOver, win);
         });
     window.show();
 
