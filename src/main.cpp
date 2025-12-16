@@ -27,6 +27,15 @@ int main(int argc, char* argv[])
     gameModel.setGameOverCallback([&window](bool win) {
         QMetaObject::invokeMethod(&window, &MainWindow::onGameOver, win);
         });
+
+    gameModel.setStatusCallback([&window](SeaBattle::ConnectionStatus status) {
+        QMetaObject::invokeMethod(&window, &MainWindow::onStatusUpdate, status);
+        });
+
+    gameModel.setGameReadyCallback([&window]() {
+        QMetaObject::invokeMethod(&window, &MainWindow::onGameReady);
+        });
+
     window.show();
 
     return app.exec();

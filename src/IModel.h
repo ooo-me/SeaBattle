@@ -57,6 +57,12 @@ namespace SeaBattle
         GameOver
     };
 
+    enum class ConnectionStatus
+    {
+        WaitingForPlayers,
+        Loading
+    };
+
     struct IModel
     {
         virtual ~IModel() = default;
