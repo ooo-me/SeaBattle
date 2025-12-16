@@ -22,9 +22,10 @@ public slots:
     void onGameOver(bool win);
     void onStatusUpdate(SeaBattle::ConnectionStatus status);
     void onGameReady();
+    void onPlayerNamesReceived(const std::string& localName, const std::string& opponentName);
 
 private slots:
-    void showWaitingScreen();
+    void showWaitingScreen(const QString& playerName);
     void showGameScreen();
     void showWelcomeScreen();
     void onCellClicked(int player, int row, int col);

@@ -28,6 +28,9 @@ namespace
         // Хранение указателей на WebSocket-соединения игроков
         std::array<WebSocketStream*, 2> playerSockets = {nullptr, nullptr};
         std::mutex socketsMutex;
+
+        // Player names
+        std::array<std::string, 2> playerNames = {"Игрок 1", "Игрок 2"};
     };
 
     GameServerState g_state;
@@ -50,6 +53,7 @@ namespace
             {"gameState", static_cast<int>(g_state.model.GetGameState())},
             {"currentPlayer", g_state.model.GetCurrentPlayer()},
             {"winner", g_state.model.GetWinner()},
+            {"playerNames", g_state.playerNames},
         };
 
         // Отправляем корабли игрока, если игра началась
@@ -229,6 +233,15 @@ namespace
                 std::cout << "[server] state request from player " << playerIndex << std::endl;
                 auto payload = make_state(playerIndex).dump();
                 co_await ws.async_write(boost::asio::buffer(payload), boost::asio::use_awaitable);
+            }
+            else if (type == "set_name")
+            {
+                std::string name = request.value("name", "");
+                if (!name.empty())
+                {
+                    g_state.playerNames[playerIndex] = name;
+                    std::cout << "[server] player " << playerIndex << " set name to '" << name << "'" << std::endl;
+                }
             }
             else
             {

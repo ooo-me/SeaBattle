@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
 namespace SeaBattle
@@ -74,5 +75,10 @@ namespace SeaBattle
         virtual int GetCurrentPlayer() const = 0;
         virtual int GetLocalPlayer() const = 0;
         virtual GameState GetGameState() const = 0;
+
+        // Player name support
+        virtual void SetPlayerName(const std::string& name) = 0;
+        virtual std::string GetLocalPlayerName() const = 0;
+        virtual std::string GetOpponentName() const = 0;
     };
 }

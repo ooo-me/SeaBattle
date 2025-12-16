@@ -66,6 +66,27 @@ void GameScreen::setLocalPlayer(int localPlayer)
     // rebuildLayoutsForCurrentPlayer будет вызван через onPlayerSwitched.
 }
 
+void GameScreen::setPlayerNames(const QString& localName, const QString& opponentName)
+{
+    m_localPlayerName = localName;
+    m_opponentName = opponentName;
+    updateLabels();
+}
+
+void GameScreen::updateLabels()
+{
+    if (m_localPlayerName.isEmpty())
+    {
+        m_player1Label->setText("Ваше поле");
+        m_player2Label->setText("Поле противника");
+    }
+    else
+    {
+        m_player1Label->setText(QString("Ваше поле (%1)").arg(m_localPlayerName));
+        m_player2Label->setText(QString("Поле противника (%1)").arg(m_opponentName));
+    }
+}
+
 void GameScreen::rebuildLayoutsForCurrentPlayer()
 {
     auto clearLayout = [](QLayout* layout) {
@@ -89,8 +110,7 @@ void GameScreen::rebuildLayoutsForCurrentPlayer()
 
     // m_player1Field - всегда "Ваше поле" (поле локального игрока)
     // m_player2Field - всегда "Поле противника" (куда мы стреляем)
-    m_player1Label->setText("Ваше поле");
-    m_player2Label->setText("Поле противника");
+    updateLabels();
 
     m_leftLayout->addWidget(m_player1Label);
     m_leftLayout->addWidget(m_player1Field);

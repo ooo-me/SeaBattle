@@ -9,5 +9,8 @@ public:
     WelcomeScreen(QWidget* parent = nullptr);
 
 signals:
-    void startGameRequested();
+    void startGameRequested(const QString& playerName);
+
+private slots:
+    void onStartButtonClicked();
 };

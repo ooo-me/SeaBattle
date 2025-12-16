@@ -36,6 +36,10 @@ int main(int argc, char* argv[])
         QMetaObject::invokeMethod(&window, &MainWindow::onGameReady);
         });
 
+    gameModel.setPlayerNamesCallback([&window](const std::string& localName, const std::string& opponentName) {
+        QMetaObject::invokeMethod(&window, "onPlayerNamesReceived", Q_ARG(std::string, localName), Q_ARG(std::string, opponentName));
+        });
+
     window.show();
 
     return app.exec();
