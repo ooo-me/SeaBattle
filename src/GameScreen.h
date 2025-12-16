@@ -26,7 +26,7 @@ public:
 public slots:
     void onPlayerSwitched(int newPlayer);
     void onCellUpdated(int player, int row, int col, SeaBattle::CellState state);
-    void onGameOver(int winner);
+    void onGameOver(bool win);
 
 signals:
     void cellClicked(int player, int row, int col);

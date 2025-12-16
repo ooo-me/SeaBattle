@@ -102,9 +102,9 @@ void MainWindow::onPlayerSwitched(int newPlayer)
     refreshShipOverlaysForCurrentPlayer();
 }
 
-void MainWindow::onGameOver(int winner)
+void MainWindow::onGameOver(bool win)
 {
-    m_gameScreen->onGameOver(winner);
+    m_gameScreen->onGameOver(win);
 }
 
 void MainWindow::onExitGameRequested()

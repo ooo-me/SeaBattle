@@ -153,14 +153,14 @@ void GameScreen::onCellUpdated(int player, int row, int col, SeaBattle::CellStat
     }
 }
 
-void GameScreen::onGameOver(int winner)
+void GameScreen::onGameOver(bool win)
 {
     m_player1Field->disableAllCells();
     m_player2Field->disableAllCells();
 
-    QMessageBox msgBox;
+    QMessageBox msgBox(this);
     msgBox.setWindowTitle("Игра окончена");
-    msgBox.setText(QString("Победил игрок %1!").arg(winner + 1));
+    msgBox.setText(win ? QString("Вы выйграли!") : QString("Вы проиграли!"));
     QPushButton* newGameButton = msgBox.addButton("Новая игра", QMessageBox::AcceptRole);
     QPushButton* exitButton = msgBox.addButton("Выход", QMessageBox::RejectRole);
     msgBox.exec();
@@ -182,7 +182,7 @@ void GameScreen::onEnemyCellClicked(int row, int col)
 void GameScreen::onExitButtonClicked()
 {
     // Показываем диалог подтверждения выхода
-    QMessageBox msgBox;
+    QMessageBox msgBox(this);
     msgBox.setWindowTitle("Подтверждение выхода");
     msgBox.setText("Вы уверены, что хотите выйти из игры? Текущий прогресс будет потерян.");
     msgBox.addButton("Вернуться к игре", QMessageBox::RejectRole);

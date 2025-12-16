@@ -16,41 +16,20 @@
 #include <mutex>
 #include <thread>
 #include <condition_variable>
-
-using tcp = boost::asio::ip::tcp;
-namespace websocket = boost::beast::websocket;
+#include <boost/asio/thread_pool.hpp>
 
 class Client
 {
 public:
     using PlayerSwitchCallback = std::function<void(int newPlayer)>;
     using CellUpdateCallback = std::function<void(int player, int row, int col, SeaBattle::CellState state)>;
-    using GameOverCallback = std::function<void(int winner)>;
+    using GameOverCallback = std::function<void(bool)>;
 
     Client()
-        : m_ioc()
-        , m_ws(m_ioc)
-        , m_workGuard(boost::asio::make_work_guard(m_ioc))
+        : m_ws(m_ioc)
     {
-        m_thread = std::thread([this]() { m_ioc.run(); });
     }
-
-    ~Client()
-    {
-        try
-        {
-            m_running.store(false);
-            m_workGuard.reset();
-            m_ioc.stop();
-            if (m_thread.joinable())
-            {
-                m_thread.join();
-            }
-        }
-        catch (...)
-        {
-        }
-    }
+    ~Client() = default;
 
     void setPlayerSwitchCallback(PlayerSwitchCallback callback) { m_playerSwitchCallback = callback; }
     void setCellUpdateCallback(CellUpdateCallback callback) { m_cellUpdateCallback = callback; }
@@ -64,7 +43,7 @@ public:
                 try
                 {
                     auto executor = co_await boost::asio::this_coro::executor;
-                    tcp::resolver resolver(executor);
+                    boost::asio::ip::tcp::resolver resolver(executor);
                     auto const results = co_await resolver.async_resolve("127.0.0.7", "1365", boost::asio::use_awaitable);
 
                     co_await boost::asio::async_connect(m_ws.next_layer(), results, boost::asio::use_awaitable);
@@ -220,6 +199,10 @@ public:
                             std::lock_guard<std::mutex> lock(m_stateMutex);
                             m_currentPlayer = resp.value("currentPlayer", 0);
                             m_gameState = static_cast<SeaBattle::GameState>(resp.value("gameState", 0));
+                            if (resp.contains("winner"))
+                            {
+                                m_winner = resp.value("winner", -1);
+                            }
                         }
                         
                         // Разблокируем send_shot
@@ -263,7 +246,7 @@ public:
                         if (gameState == SeaBattle::GameState::GameOver && m_gameOverCallback)
                         {
                             int winner = resp.value("winner", -1);
-                            m_gameOverCallback(winner);
+                            m_gameOverCallback(winner == m_localPlayer);
                         }
                     }
                 }
@@ -287,6 +270,12 @@ public:
     {
         std::lock_guard<std::mutex> lock(m_stateMutex);
         return m_gameState;
+    }
+
+    int winner() const
+    {
+        std::lock_guard<std::mutex> lock(m_stateMutex);
+        return m_winner;
     }
 
     const std::vector<SeaBattle::Ship>& ships() const
@@ -322,10 +311,8 @@ private:
         return fut.get();
     }
 
-    boost::asio::io_context m_ioc;
-    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_workGuard;
-    websocket::stream<tcp::socket> m_ws;
-    std::thread m_thread;
+    boost::asio::thread_pool m_ioc{ 1 };
+    boost::beast::websocket::stream<boost::asio::ip::tcp::socket> m_ws;
     std::atomic<bool> m_running{false};
 
     mutable std::mutex m_stateMutex;
@@ -333,6 +320,7 @@ private:
     int m_localPlayer = 0;
     SeaBattle::GameState m_gameState = SeaBattle::GameState::Welcome;
     std::vector<SeaBattle::Ship> m_ships;
+    int m_winner = -1;
 
     // Для синхронизации результата выстрела
     std::mutex m_shotMutex;
@@ -384,7 +372,7 @@ bool RemoteModel::ProcessShot(int row, int col)
 
     if (m_gameOverCallback && m_client->game_state() == SeaBattle::GameState::GameOver)
     {
-        m_gameOverCallback(-1);
+        m_gameOverCallback(m_client->winner() == localPlayer);
     }
 
     return hit;

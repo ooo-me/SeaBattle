@@ -17,7 +17,7 @@ public:
 public slots:
     void onCellUpdated(int player, int row, int col, SeaBattle::CellState state);
     void onPlayerSwitched(int newPlayer);
-    void onGameOver(int winner);
+    void onGameOver(bool win);
 
 private slots:
     void showGameScreen();
