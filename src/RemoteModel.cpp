@@ -126,18 +126,24 @@ public:
     {
         // Report waiting status
         if (m_statusCallback)
+        {
             m_statusCallback(SeaBattle::ConnectionStatus::WaitingForPlayers);
+        }
             
         while (true)
         {
             if (!request_state())
+            {
                 return false;
+            }
             
             if (game_state() == SeaBattle::GameState::Playing)
             {
                 // Report loading status before game starts
                 if (m_statusCallback)
+                {
                     m_statusCallback(SeaBattle::ConnectionStatus::Loading);
+                }
                 return true;
             }
             
@@ -363,7 +369,9 @@ void RemoteModel::StartGame()
     
     // Notify that the game is ready
     if (m_gameReadyCallback)
+    {
         m_gameReadyCallback();
+    }
 }
 
 bool RemoteModel::ProcessShot(int row, int col)

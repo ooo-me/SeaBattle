@@ -50,11 +50,10 @@ void MainWindow::showWaitingScreen()
     m_gameScreen->getPlayer1Field()->clearAll();
     m_gameScreen->getPlayer2Field()->clearAll();
 
-    // Start the game connection in a background thread
-    // The status callback will update the waiting screen
-    // The game ready callback will transition to the game screen
-    // Note: The join here should be nearly instant as the previous thread
-    // would have finished when the game started and the user returned to welcome screen
+    // Start the game connection in a background thread.
+    // The status callback will update the waiting screen.
+    // The game ready callback will transition to the game screen.
+    // Ensure any previous connection thread is finished before starting a new one.
     if (m_connectionThread && m_connectionThread->joinable())
     {
         m_connectionThread->join();
