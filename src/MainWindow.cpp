@@ -98,9 +98,9 @@ void MainWindow::onGameReady()
     showGameScreen();
 }
 
-void MainWindow::onPlayerNamesReceived(const std::string& localName, const std::string& opponentName)
+void MainWindow::onPlayerNamesReceived(const QString& localName, const QString& opponentName)
 {
-    m_gameScreen->setPlayerNames(QString::fromStdString(localName), QString::fromStdString(opponentName));
+    m_gameScreen->setPlayerNames(localName, opponentName);
 }
 
 void MainWindow::showWelcomeScreen()

@@ -129,7 +129,7 @@ public:
                     if (resp.contains("playerNames") && resp["playerNames"].is_array())
                     {
                         auto& names = resp["playerNames"];
-                        if (names.size() >= 2)
+                        if (names.size() >= 2 && m_localPlayer >= 0 && m_localPlayer <= 1)
                         {
                             m_localPlayerName = names[m_localPlayer].get<std::string>();
                             m_opponentName = names[1 - m_localPlayer].get<std::string>();
@@ -493,9 +493,13 @@ void RemoteModel::SetPlayerName(const std::string& name)
 
 std::string RemoteModel::GetLocalPlayerName() const
 {
-    if (!m_client)
-        return m_playerName;
-    return m_client->local_player_name();
+    if (m_client)
+    {
+        std::string clientName = m_client->local_player_name();
+        if (!clientName.empty())
+            return clientName;
+    }
+    return m_playerName;
 }
 
 std::string RemoteModel::GetOpponentName() const
