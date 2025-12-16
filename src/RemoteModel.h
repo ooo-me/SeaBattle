@@ -10,6 +10,8 @@ public:
     using CellUpdateCallback = std::function<void(int player, int row, int col, SeaBattle::CellState state)>;
     using PlayerSwitchCallback = std::function<void(int newPlayer)>;
     using GameOverCallback = std::function<void(bool)>;
+    using StatusCallback = std::function<void(const std::string& status)>;
+    using GameReadyCallback = std::function<void()>;
 
     RemoteModel();
     ~RemoteModel() override;
@@ -25,6 +27,8 @@ public:
     void setCellUpdateCallback(CellUpdateCallback callback) { m_cellUpdateCallback = callback; }
     void setPlayerSwitchCallback(PlayerSwitchCallback callback) { m_playerSwitchCallback = callback; }
     void setGameOverCallback(GameOverCallback callback) { m_gameOverCallback = callback; }
+    void setStatusCallback(StatusCallback callback) { m_statusCallback = callback; }
+    void setGameReadyCallback(GameReadyCallback callback) { m_gameReadyCallback = callback; }
 
 private:
     std::unique_ptr<Client> m_client;
@@ -32,4 +36,6 @@ private:
     CellUpdateCallback m_cellUpdateCallback;
     PlayerSwitchCallback m_playerSwitchCallback;
     GameOverCallback m_gameOverCallback;
+    StatusCallback m_statusCallback;
+    GameReadyCallback m_gameReadyCallback;
 };

@@ -24,6 +24,7 @@ public:
     using PlayerSwitchCallback = std::function<void(int newPlayer)>;
     using CellUpdateCallback = std::function<void(int player, int row, int col, SeaBattle::CellState state)>;
     using GameOverCallback = std::function<void(bool)>;
+    using StatusCallback = std::function<void(const std::string& status)>;
 
     Client()
         : m_ws(m_ioc)
@@ -34,6 +35,7 @@ public:
     void setPlayerSwitchCallback(PlayerSwitchCallback callback) { m_playerSwitchCallback = callback; }
     void setCellUpdateCallback(CellUpdateCallback callback) { m_cellUpdateCallback = callback; }
     void setGameOverCallback(GameOverCallback callback) { m_gameOverCallback = callback; }
+    void setStatusCallback(StatusCallback callback) { m_statusCallback = callback; }
 
     bool connect()
     {
@@ -122,13 +124,22 @@ public:
 
     bool wait_for_game_start()
     {
+        // Report waiting status
+        if (m_statusCallback)
+            m_statusCallback("waiting");
+            
         while (true)
         {
             if (!request_state())
                 return false;
             
             if (game_state() == SeaBattle::GameState::Playing)
+            {
+                // Report loading status before game starts
+                if (m_statusCallback)
+                    m_statusCallback("loading");
                 return true;
+            }
             
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
@@ -331,6 +342,7 @@ private:
     PlayerSwitchCallback m_playerSwitchCallback;
     CellUpdateCallback m_cellUpdateCallback;
     GameOverCallback m_gameOverCallback;
+    StatusCallback m_statusCallback;
 };
 
 RemoteModel::RemoteModel() = default;
@@ -343,10 +355,15 @@ void RemoteModel::StartGame()
     m_client->setPlayerSwitchCallback(m_playerSwitchCallback);
     m_client->setCellUpdateCallback(m_cellUpdateCallback);
     m_client->setGameOverCallback(m_gameOverCallback);
+    m_client->setStatusCallback(m_statusCallback);
     
     m_client->connect();
     m_client->wait_for_game_start();
     m_client->startListening();
+    
+    // Notify that the game is ready
+    if (m_gameReadyCallback)
+        m_gameReadyCallback();
 }
 
 bool RemoteModel::ProcessShot(int row, int col)

@@ -10,6 +10,8 @@ qt_add_executable(SeaBattle WIN32
 	"pch.h"
 	"RemoteModel.cpp"
 	"RemoteModel.h"
+	"WaitingScreen.cpp"
+	"WaitingScreen.h"
 	"WelcomeScreen.cpp"
 	"WelcomeScreen.h"
 )

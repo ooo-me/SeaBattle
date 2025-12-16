@@ -4,8 +4,11 @@
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <memory>
+#include <string>
+#include <thread>
 
 class WelcomeScreen;
+class WaitingScreen;
 class GameScreen;
 class MainWindow : public QMainWindow
 {
@@ -18,8 +21,11 @@ public slots:
     void onCellUpdated(int player, int row, int col, SeaBattle::CellState state);
     void onPlayerSwitched(int newPlayer);
     void onGameOver(bool win);
+    void onStatusUpdate(const std::string& status);
+    void onGameReady();
 
 private slots:
+    void showWaitingScreen();
     void showGameScreen();
     void showWelcomeScreen();
     void onCellClicked(int player, int row, int col);
@@ -33,6 +39,8 @@ private:
 private:
     QStackedWidget* m_stackedWidget;
     WelcomeScreen* m_welcomeScreen;
+    WaitingScreen* m_waitingScreen;
     GameScreen* m_gameScreen;
     SeaBattle::IModel& m_gameModel;
+    std::unique_ptr<std::thread> m_connectionThread;
 };

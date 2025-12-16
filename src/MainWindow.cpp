@@ -2,6 +2,7 @@
 
 #include "BattleField.h"
 #include "GameScreen.h"
+#include "WaitingScreen.h"
 #include "WelcomeScreen.h"
 
 #include <QStackedWidget>
@@ -18,29 +19,52 @@ MainWindow::MainWindow(SeaBattle::IModel& model, QWidget* parent)
 
     // Создаем экраны
     m_welcomeScreen = new WelcomeScreen();
+    m_waitingScreen = new WaitingScreen();
     m_gameScreen = new GameScreen();
 
     m_stackedWidget->addWidget(m_welcomeScreen);
+    m_stackedWidget->addWidget(m_waitingScreen);
     m_stackedWidget->addWidget(m_gameScreen);
 
     // Подключаем сигналы
-    connect(m_welcomeScreen, &WelcomeScreen::startGameRequested, this, &MainWindow::showGameScreen);
+    connect(m_welcomeScreen, &WelcomeScreen::startGameRequested, this, &MainWindow::showWaitingScreen);
     connect(m_gameScreen, &GameScreen::returnToMainMenu, this, &MainWindow::showWelcomeScreen);
     connect(m_gameScreen, &GameScreen::cellClicked, this, &MainWindow::onCellClicked);
     connect(m_gameScreen, &GameScreen::exitGameRequested, this, &MainWindow::onExitGameRequested);
 }
 
-MainWindow::~MainWindow() = default;
-
-void MainWindow::showGameScreen()
+MainWindow::~MainWindow()
 {
-    m_stackedWidget->setCurrentWidget(m_gameScreen);
+    if (m_connectionThread && m_connectionThread->joinable())
+    {
+        m_connectionThread->join();
+    }
+}
 
+void MainWindow::showWaitingScreen()
+{
+    m_stackedWidget->setCurrentWidget(m_waitingScreen);
+    m_waitingScreen->setStatusWaiting();
+    
     // Полный сброс визуального состояния перед новой игрой
     m_gameScreen->getPlayer1Field()->clearAll();
     m_gameScreen->getPlayer2Field()->clearAll();
 
-    m_gameModel.StartGame();
+    // Start the game connection in a background thread
+    // The status callback will update the waiting screen
+    // The game ready callback will transition to the game screen
+    if (m_connectionThread && m_connectionThread->joinable())
+    {
+        m_connectionThread->join();
+    }
+    m_connectionThread = std::make_unique<std::thread>([this]() {
+        m_gameModel.StartGame();
+    });
+}
+
+void MainWindow::showGameScreen()
+{
+    m_stackedWidget->setCurrentWidget(m_gameScreen);
     
     // Устанавливаем локального игрока и текущего игрока в GameScreen
     m_gameScreen->setLocalPlayer(m_gameModel.GetLocalPlayer());
@@ -51,6 +75,23 @@ void MainWindow::showGameScreen()
 
     // Показываем кнопку выхода, так как игра началась (состояние Playing)
     m_gameScreen->setExitButtonVisible(true);
+}
+
+void MainWindow::onStatusUpdate(const std::string& status)
+{
+    if (status == "waiting")
+    {
+        m_waitingScreen->setStatusWaiting();
+    }
+    else if (status == "loading")
+    {
+        m_waitingScreen->setStatusLoading();
+    }
+}
+
+void MainWindow::onGameReady()
+{
+    showGameScreen();
 }
 
 void MainWindow::showWelcomeScreen()
