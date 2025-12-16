@@ -24,7 +24,7 @@ public:
     using PlayerSwitchCallback = std::function<void(int newPlayer)>;
     using CellUpdateCallback = std::function<void(int player, int row, int col, SeaBattle::CellState state)>;
     using GameOverCallback = std::function<void(bool)>;
-    using StatusCallback = std::function<void(const std::string& status)>;
+    using StatusCallback = std::function<void(SeaBattle::ConnectionStatus status)>;
 
     Client()
         : m_ws(m_ioc)
@@ -126,7 +126,7 @@ public:
     {
         // Report waiting status
         if (m_statusCallback)
-            m_statusCallback("waiting");
+            m_statusCallback(SeaBattle::ConnectionStatus::WaitingForPlayers);
             
         while (true)
         {
@@ -137,7 +137,7 @@ public:
             {
                 // Report loading status before game starts
                 if (m_statusCallback)
-                    m_statusCallback("loading");
+                    m_statusCallback(SeaBattle::ConnectionStatus::Loading);
                 return true;
             }
             

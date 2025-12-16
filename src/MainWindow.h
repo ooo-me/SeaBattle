@@ -4,7 +4,6 @@
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <memory>
-#include <string>
 #include <thread>
 
 class WelcomeScreen;
@@ -21,7 +20,7 @@ public slots:
     void onCellUpdated(int player, int row, int col, SeaBattle::CellState state);
     void onPlayerSwitched(int newPlayer);
     void onGameOver(bool win);
-    void onStatusUpdate(const std::string& status);
+    void onStatusUpdate(SeaBattle::ConnectionStatus status);
     void onGameReady();
 
 private slots:

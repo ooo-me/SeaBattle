@@ -53,6 +53,8 @@ void MainWindow::showWaitingScreen()
     // Start the game connection in a background thread
     // The status callback will update the waiting screen
     // The game ready callback will transition to the game screen
+    // Note: The join here should be nearly instant as the previous thread
+    // would have finished when the game started and the user returned to welcome screen
     if (m_connectionThread && m_connectionThread->joinable())
     {
         m_connectionThread->join();
@@ -77,13 +79,13 @@ void MainWindow::showGameScreen()
     m_gameScreen->setExitButtonVisible(true);
 }
 
-void MainWindow::onStatusUpdate(const std::string& status)
+void MainWindow::onStatusUpdate(SeaBattle::ConnectionStatus status)
 {
-    if (status == "waiting")
+    if (status == SeaBattle::ConnectionStatus::WaitingForPlayers)
     {
         m_waitingScreen->setStatusWaiting();
     }
-    else if (status == "loading")
+    else if (status == SeaBattle::ConnectionStatus::Loading)
     {
         m_waitingScreen->setStatusLoading();
     }

@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
         QMetaObject::invokeMethod(&window, &MainWindow::onGameOver, win);
         });
 
-    gameModel.setStatusCallback([&window](const std::string& status) {
+    gameModel.setStatusCallback([&window](SeaBattle::ConnectionStatus status) {
         QMetaObject::invokeMethod(&window, &MainWindow::onStatusUpdate, status);
         });
 
