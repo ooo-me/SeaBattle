@@ -41,10 +41,13 @@ MainWindow::~MainWindow()
     }
 }
 
-void MainWindow::showWaitingScreen()
+void MainWindow::showWaitingScreen(const QString& playerName)
 {
     m_stackedWidget->setCurrentWidget(m_waitingScreen);
     m_waitingScreen->setStatusWaiting();
+    
+    // Set the player name in the model
+    m_gameModel.SetPlayerName(playerName.toStdString());
     
     // Полный сброс визуального состояния перед новой игрой
     m_gameScreen->getPlayer1Field()->clearAll();
@@ -93,6 +96,11 @@ void MainWindow::onStatusUpdate(SeaBattle::ConnectionStatus status)
 void MainWindow::onGameReady()
 {
     showGameScreen();
+}
+
+void MainWindow::onPlayerNamesReceived(const QString& localName, const QString& opponentName)
+{
+    m_gameScreen->setPlayerNames(localName, opponentName);
 }
 
 void MainWindow::showWelcomeScreen()

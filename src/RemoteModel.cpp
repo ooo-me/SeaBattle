@@ -25,6 +25,7 @@ public:
     using CellUpdateCallback = std::function<void(int player, int row, int col, SeaBattle::CellState state)>;
     using GameOverCallback = std::function<void(bool)>;
     using StatusCallback = std::function<void(SeaBattle::ConnectionStatus status)>;
+    using PlayerNamesCallback = std::function<void(const std::string& localName, const std::string& opponentName)>;
 
     Client()
         : m_ws(m_ioc)
@@ -36,6 +37,9 @@ public:
     void setCellUpdateCallback(CellUpdateCallback callback) { m_cellUpdateCallback = callback; }
     void setGameOverCallback(GameOverCallback callback) { m_gameOverCallback = callback; }
     void setStatusCallback(StatusCallback callback) { m_statusCallback = callback; }
+    void setPlayerNamesCallback(PlayerNamesCallback callback) { m_playerNamesCallback = callback; }
+
+    void setPlayerName(const std::string& name) { m_playerName = name; }
 
     bool connect()
     {
@@ -64,6 +68,14 @@ public:
                             m_localPlayer = hello.value("player", 0);
                         }
                     }
+
+                    // Send player name to server
+                    nlohmann::json setNameReq{
+                        {"type", "set_name"},
+                        {"name", m_playerName}
+                    };
+                    co_await m_ws.async_write(boost::asio::buffer(setNameReq.dump()), boost::asio::use_awaitable);
+
                     co_return true;
                 }
                 catch (...)
@@ -112,6 +124,17 @@ public:
                             }
                         }
                     }
+
+                    // Parse player names
+                    if (resp.contains("playerNames") && resp["playerNames"].is_array())
+                    {
+                        auto& names = resp["playerNames"];
+                        if (names.size() >= 2 && m_localPlayer >= 0 && m_localPlayer <= 1)
+                        {
+                            m_localPlayerName = names[m_localPlayer].get<std::string>();
+                            m_opponentName = names[1 - m_localPlayer].get<std::string>();
+                        }
+                    }
                     
                     co_return true;
                 }
@@ -144,6 +167,14 @@ public:
                 {
                     m_statusCallback(SeaBattle::ConnectionStatus::Loading);
                 }
+
+                // Notify about player names
+                if (m_playerNamesCallback)
+                {
+                    std::lock_guard<std::mutex> lock(m_stateMutex);
+                    m_playerNamesCallback(m_localPlayerName, m_opponentName);
+                }
+
                 return true;
             }
             
@@ -301,6 +332,18 @@ public:
         return m_ships;
     }
 
+    std::string local_player_name() const
+    {
+        std::lock_guard<std::mutex> lock(m_stateMutex);
+        return m_localPlayerName;
+    }
+
+    std::string opponent_name() const
+    {
+        std::lock_guard<std::mutex> lock(m_stateMutex);
+        return m_opponentName;
+    }
+
 private:
     template <typename T, typename Fn>
     T run_sync(Fn fn)
@@ -339,6 +382,11 @@ private:
     std::vector<SeaBattle::Ship> m_ships;
     int m_winner = -1;
 
+    // Player names
+    std::string m_playerName;
+    std::string m_localPlayerName;
+    std::string m_opponentName;
+
     // Для синхронизации результата выстрела
     std::mutex m_shotMutex;
     std::condition_variable m_shotCV;
@@ -349,6 +397,7 @@ private:
     CellUpdateCallback m_cellUpdateCallback;
     GameOverCallback m_gameOverCallback;
     StatusCallback m_statusCallback;
+    PlayerNamesCallback m_playerNamesCallback;
 };
 
 RemoteModel::RemoteModel() = default;
@@ -362,6 +411,8 @@ void RemoteModel::StartGame()
     m_client->setCellUpdateCallback(m_cellUpdateCallback);
     m_client->setGameOverCallback(m_gameOverCallback);
     m_client->setStatusCallback(m_statusCallback);
+    m_client->setPlayerNamesCallback(m_playerNamesCallback);
+    m_client->setPlayerName(m_playerName);
     
     m_client->connect();
     m_client->wait_for_game_start();
@@ -433,5 +484,28 @@ SeaBattle::GameState RemoteModel::GetGameState() const
     if (!m_client)
         return SeaBattle::GameState::Welcome;
     return m_client->game_state();
+}
+
+void RemoteModel::SetPlayerName(const std::string& name)
+{
+    m_playerName = name;
+}
+
+std::string RemoteModel::GetLocalPlayerName() const
+{
+    if (m_client)
+    {
+        std::string clientName = m_client->local_player_name();
+        if (!clientName.empty())
+            return clientName;
+    }
+    return m_playerName;
+}
+
+std::string RemoteModel::GetOpponentName() const
+{
+    if (!m_client)
+        return "";
+    return m_client->opponent_name();
 }
 

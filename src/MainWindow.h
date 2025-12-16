@@ -3,6 +3,7 @@
 #include "IModel.h"
 #include <QMainWindow>
 #include <QStackedWidget>
+#include <QString>
 #include <memory>
 #include <thread>
 
@@ -22,9 +23,10 @@ public slots:
     void onGameOver(bool win);
     void onStatusUpdate(SeaBattle::ConnectionStatus status);
     void onGameReady();
+    void onPlayerNamesReceived(const QString& localName, const QString& opponentName);
 
 private slots:
-    void showWaitingScreen();
+    void showWaitingScreen(const QString& playerName);
     void showGameScreen();
     void showWelcomeScreen();
     void onCellClicked(int player, int row, int col);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QString>
 
 class BattleField;
 namespace SeaBattle
@@ -23,6 +24,9 @@ public:
     // Устанавливает локального игрока для правильного отображения полей
     void setLocalPlayer(int localPlayer);
 
+    // Устанавливает имена игроков для отображения
+    void setPlayerNames(const QString& localName, const QString& opponentName);
+
 public slots:
     void onPlayerSwitched(int newPlayer);
     void onCellUpdated(int player, int row, int col, SeaBattle::CellState state);
@@ -39,11 +43,15 @@ private slots:
 
 private:
     void rebuildLayoutsForCurrentPlayer();
+    void updateLabels();
 
     BattleField* m_player1Field;
     BattleField* m_player2Field;
     int m_currentPlayer;
     int m_localPlayer = 0;
+
+    QString m_localPlayerName;
+    QString m_opponentName;
 
     QVBoxLayout* m_mainLayout; // Главный вертикальный layout
     QHBoxLayout* m_fieldsLayout; // Горизонтальный layout для полей
