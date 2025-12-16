@@ -3,13 +3,13 @@ qt_add_executable(SeaBattle WIN32
 	"BattleField.h"
 	"GameScreen.cpp"
 	"GameScreen.h"
+	"IModel.h"
 	"main.cpp"
 	"MainWindow.cpp"
 	"MainWindow.h"
-	"Model.h"
-	"ModelAdapter.cpp"
-	"ModelAdapter.h"
 	"pch.h"
+	"RemoteModel.cpp"
+	"RemoteModel.h"
 	"WelcomeScreen.cpp"
 	"WelcomeScreen.h"
 )
@@ -21,6 +21,8 @@ target_precompile_headers(SeaBattle PRIVATE
 target_link_libraries(SeaBattle PRIVATE
 	Qt::Core
 	Qt::Widgets
+    Boost::headers
+    nlohmann_json::nlohmann_json
 )
 
 install(TARGETS SeaBattle

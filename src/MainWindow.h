@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Model.h"
+#include "IModel.h"
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <memory>

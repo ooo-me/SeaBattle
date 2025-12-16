@@ -41,6 +41,11 @@ void MainWindow::showGameScreen()
     m_gameScreen->getPlayer2Field()->clearAll();
 
     m_gameModel.StartGame();
+    
+    // Устанавливаем локального игрока и текущего игрока в GameScreen
+    m_gameScreen->setLocalPlayer(m_gameModel.GetLocalPlayer());
+    m_gameScreen->onPlayerSwitched(m_gameModel.GetCurrentPlayer());
+    
     updateBattleFields();
     showTurnMessage(m_gameModel.GetCurrentPlayer());
 
@@ -70,14 +75,8 @@ void MainWindow::onCellClicked(int player, int row, int col)
     // Если попадание и игра не окончена — разрешаем ОСТАВШИЕСЯ незастреленные клетки на поле противника
     if (hit && m_gameModel.GetGameState() == SeaBattle::GameState::Playing)
     {
-        if (player == 0)
-        {
-            m_gameScreen->getPlayer2Field()->enableUnshotCells();
-        }
-        else
-        {
-            m_gameScreen->getPlayer1Field()->enableUnshotCells();
-        }
+        // m_player2Field - всегда поле противника
+        m_gameScreen->getPlayer2Field()->enableUnshotCells();
         return;
     }
 
@@ -87,14 +86,7 @@ void MainWindow::onCellClicked(int player, int row, int col)
     if (after == before && m_gameModel.GetGameState() == SeaBattle::GameState::Playing)
     {
         // Недопустимый выстрел: возвращаем доступ к незастреленным клеткам поля противника
-        if (before == 0)
-        {
-            m_gameScreen->getPlayer2Field()->enableUnshotCells();
-        }
-        else
-        {
-            m_gameScreen->getPlayer1Field()->enableUnshotCells();
-        }
+        m_gameScreen->getPlayer2Field()->enableUnshotCells();
     }
 }
 
@@ -136,57 +128,44 @@ void MainWindow::refreshShipOverlaysForCurrentPlayer()
     m_gameScreen->getPlayer1Field()->resetUnfiredCellsStyle();
     m_gameScreen->getPlayer2Field()->resetUnfiredCellsStyle();
 
-    int current = m_gameModel.GetCurrentPlayer();
+    int localPlayer = m_gameModel.GetLocalPlayer();
 
-    const auto& player1Ships = m_gameModel.GetPlayerShips(0);
-    const auto& player2Ships = m_gameModel.GetPlayerShips(1);
+    // Получаем корабли локального игрока
+    const auto& localShips = m_gameModel.GetPlayerShips(localPlayer);
 
-    BattleField* ownField = nullptr;
-    BattleField* enemyField = nullptr;
-    const std::vector<SeaBattle::Ship>* ownShips = nullptr;
-    const std::vector<SeaBattle::Ship>* enemyShips = nullptr;
+    // m_player1Field - всегда "Ваше поле", поэтому корабли рисуем там
+    BattleField* ownField = m_gameScreen->getPlayer1Field();
 
-    if (current == 0)
-    {
-        ownField = m_gameScreen->getPlayer1Field();
-        enemyField = m_gameScreen->getPlayer2Field();
-        ownShips = &player1Ships;
-        enemyShips = &player2Ships;
-    }
-    else
-    {
-        ownField = m_gameScreen->getPlayer2Field();
-        enemyField = m_gameScreen->getPlayer1Field();
-        ownShips = &player2Ships;
-        enemyShips = &player1Ships;
-    }
-
-    // Наносим зелёные метки для своих кораблей (ownField)
-    for (const auto& ship : *ownShips)
+    // Наносим зелёные метки для своих кораблей
+    for (const auto& ship : localShips)
     {
         for (const auto& pos : ship.positions)
         {
             ownField->markShip(pos.first, pos.second);
         }
     }
-
-    // Подсветка кораблей противника (debug). Чтобы включить — поменять #if 0 на #if 1.
-#if 0
-    for (const auto& ship : *enemyShips)
-    {
-        for (const auto& pos : ship.positions)
-        {
-            enemyField->markDebug(pos.first, pos.second);
-        }
-    }
-#endif
 }
 
-void MainWindow::showTurnMessage(int player)
+void MainWindow::showTurnMessage(int currentPlayer)
 {
-    QMessageBox msgBox;
+    int localPlayer = m_gameModel.GetLocalPlayer();
+    
+    QMessageBox msgBox(this);
     msgBox.setWindowTitle("Смена хода");
-    msgBox.setText(QString("Ход игрока %1").arg(player + 1));
+    
+    if (currentPlayer == localPlayer)
+    {
+        msgBox.setText("Ваш ход");
+    }
+    else
+    {
+        msgBox.setText("Ход противника");
+    }
+    
     msgBox.addButton("Продолжить", QMessageBox::AcceptRole);
+    
+    // Центрируем окно сообщения относительно родительского окна
+    msgBox.move(this->geometry().center() - msgBox.rect().center());
+    
     msgBox.exec();
 }

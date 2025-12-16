@@ -19,6 +19,9 @@ public:
 
     // Показать/скрыть кнопку выхода в зависимости от состояния игры
     void setExitButtonVisible(bool visible);
+    
+    // Устанавливает локального игрока для правильного отображения полей
+    void setLocalPlayer(int localPlayer);
 
 public slots:
     void onPlayerSwitched(int newPlayer);
@@ -40,6 +43,7 @@ private:
     BattleField* m_player1Field;
     BattleField* m_player2Field;
     int m_currentPlayer;
+    int m_localPlayer = 0;
 
     QVBoxLayout* m_mainLayout; // Главный вертикальный layout
     QHBoxLayout* m_fieldsLayout; // Горизонтальный layout для полей
