@@ -1,5 +1,4 @@
-#include "Model.h"
-#include "ModelAdapter.h"
+#include "RemoteModel.h"
 #include "MainWindow.h"
 
 int main(int argc, char* argv[])
@@ -13,8 +12,7 @@ int main(int argc, char* argv[])
         "                               stop:0 #1E3C72, stop:1 #2A5298);"
         "}");
 
-    SeaBattle::GameModel model;
-    auto gameModel = GameModelAdapter(model);
+    auto gameModel = RemoteModel();
 
     MainWindow window(gameModel);
     // Подключаем callback'и к GameScreen

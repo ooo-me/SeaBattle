@@ -1,7 +1,7 @@
 #include "GameScreen.h"
 
 #include "BattleField.h"
-#include "Model.h"
+#include "IModel.h"
 
 GameScreen::GameScreen(QWidget* parent)
     : QWidget(parent)
@@ -50,11 +50,20 @@ GameScreen::GameScreen(QWidget* parent)
     m_mainLayout->addWidget(m_buttonsWidget);
 
     m_currentPlayer = 0;
+    m_localPlayer = 0;
     rebuildLayoutsForCurrentPlayer();
 
     connect(m_player2Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
     connect(m_player1Field, &BattleField::cellClicked, this, &GameScreen::onEnemyCellClicked);
     connect(m_exitButton, &QPushButton::clicked, this, &GameScreen::onExitButtonClicked);
+}
+
+void GameScreen::setLocalPlayer(int localPlayer)
+{
+    m_localPlayer = localPlayer;
+    // Не вызываем rebuildLayoutsForCurrentPlayer здесь,
+    // так как m_currentPlayer ещё может быть не установлен.
+    // rebuildLayoutsForCurrentPlayer будет вызван через onPlayerSwitched.
 }
 
 void GameScreen::rebuildLayoutsForCurrentPlayer()
@@ -69,7 +78,7 @@ void GameScreen::rebuildLayoutsForCurrentPlayer()
             }
             delete item;
         }
-        };
+    };
 
     clearLayout(m_leftLayout);
     clearLayout(m_rightLayout);
@@ -78,33 +87,26 @@ void GameScreen::rebuildLayoutsForCurrentPlayer()
     m_player1Field->resetUnfiredCellsStyle();
     m_player2Field->resetUnfiredCellsStyle();
 
-    if (m_currentPlayer == 0)
+    // m_player1Field - всегда "Ваше поле" (поле локального игрока)
+    // m_player2Field - всегда "Поле противника" (куда мы стреляем)
+    m_player1Label->setText("Ваше поле");
+    m_player2Label->setText("Поле противника");
+
+    m_leftLayout->addWidget(m_player1Label);
+    m_leftLayout->addWidget(m_player1Field);
+
+    m_rightLayout->addWidget(m_player2Label);
+    m_rightLayout->addWidget(m_player2Field);
+
+    // Разрешаем выстрелы только если сейчас ход локального игрока
+    if (m_currentPlayer == m_localPlayer)
     {
-        m_player1Label->setText("Ваше поле");
-        m_player2Label->setText("Поле противника");
-
-        m_leftLayout->addWidget(m_player1Label);
-        m_leftLayout->addWidget(m_player1Field);
-
-        m_rightLayout->addWidget(m_player2Label);
-        m_rightLayout->addWidget(m_player2Field);
-
-        // Разрешаем выстрелы только по полю противника
         m_player2Field->enableUnshotCells();
         m_player1Field->disableAllCells();
     }
     else
     {
-        m_player2Label->setText("Ваше поле");
-        m_player1Label->setText("Поле противника");
-
-        m_leftLayout->addWidget(m_player2Label);
-        m_leftLayout->addWidget(m_player2Field);
-
-        m_rightLayout->addWidget(m_player1Label);
-        m_rightLayout->addWidget(m_player1Field);
-
-        m_player1Field->enableUnshotCells();
+        m_player1Field->disableAllCells();
         m_player2Field->disableAllCells();
     }
 }
@@ -117,11 +119,13 @@ void GameScreen::onPlayerSwitched(int newPlayer)
 
 void GameScreen::onCellUpdated(int player, int row, int col, SeaBattle::CellState state)
 {
+    // player - это тот кто стрелял
+    // Если стрелял локальный игрок - обновляем поле противника
     BattleField* targetField = nullptr;
-    if (player == 0)
-        targetField = m_player2Field;
+    if (player == m_localPlayer)
+        targetField = m_player2Field;  // Поле противника
     else
-        targetField = m_player1Field;
+        targetField = m_player1Field;  // Наше поле (противник в нас попал)
 
     if (targetField)
     {
@@ -139,17 +143,12 @@ void GameScreen::onCellUpdated(int player, int row, int col, SeaBattle::CellStat
         }
     }
 
-    // После попадания (ход продолжится) – разрешаем оставшиеся незастреленные клетки этого же поля
-    int current = m_currentPlayer;
-    if (player == current)
+    // После попадания (ход продолжится) – разрешаем оставшиеся незастреленные клетки поля противника
+    if (player == m_localPlayer)
     {
         if (state == SeaBattle::CellState::Hit || state == SeaBattle::CellState::Destroyed)
         {
-            // Ход сохраняется, разблокируем оставшиеся незастреленные клетки поля противника
-            if (current == 0)
-                m_player2Field->enableUnshotCells();
-            else
-                m_player1Field->enableUnshotCells();
+            m_player2Field->enableUnshotCells();
         }
     }
 }
@@ -176,7 +175,8 @@ void GameScreen::onEnemyCellClicked(int row, int col)
 {
     // Не блокируем все поле: пусть модель решает исход.
     // Клик по клетке будет визуально зафиксирован через markHit/markMiss.
-    emit cellClicked(m_currentPlayer, row, col);
+    // Передаём локального игрока, так как именно он делает выстрел
+    emit cellClicked(m_localPlayer, row, col);
 }
 
 void GameScreen::onExitButtonClicked()
